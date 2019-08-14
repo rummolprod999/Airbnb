@@ -1,6 +1,7 @@
 package anbapp.parsers
 
 import anbapp.exstensions.getDataFromRegexp
+import anbapp.httpTools.downloadFromUrl
 import anbapp.logger.logger
 import org.openqa.selenium.By
 import org.openqa.selenium.Dimension
@@ -78,16 +79,21 @@ class ParserAnb : IParser, ParserAbstract() {
         }
 
         val lastDay = dateNow.withDayOfMonth(dateNow.lengthOfMonth())
-        var c = 1L
-        for (d in dateNow.dayOfMonth..lastDay.dayOfMonth) {
-            val priceUrl = """https://www.airbnb.ru/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&_p3_impression_id=$sourceImpId&check_in=${dateNow.format(customFormatter)}&check_out=${dateNow.plusDays(c).format(customFormatter)}&currency=RUB&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+        var c = 2L
+        for (d in dateNow.dayOfMonth until lastDay.plusMonths(1).dayOfMonth) {
+            val priceUrl = """https://www.airbnb.ru/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&_p3_impression_id=$sourceImpId&check_in=${dateNow.plusDays(1L).format(customFormatter)}&check_out=${dateNow.plusDays(c).format(customFormatter)}&currency=RUB&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
             c++
-            println(priceUrl)
+            downloadJson(priceUrl)
         }
     }
 
     private fun downloadJson(url: String) {
-        
+        val json = downloadFromUrl(url)
+        if (json == "") {
+            logger("get empty string, url $url")
+        }
+        if (json.contains("\"available\":true"))
+            println(json)
     }
 
 

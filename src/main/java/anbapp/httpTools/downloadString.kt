@@ -57,7 +57,7 @@ fun downloadWaitWithRef(urls: String): String {
     val url = URL(urls)
     val uc = url.openConnection()
     uc.connectTimeout = 30_000
-    uc.readTimeout = 600_000
+    uc.readTimeout = 30_000
     uc.addRequestProperty("User-Agent", RandomUserAgent.randomUserAgent)
     uc.connect()
     val `is`: InputStream = uc.getInputStream()
