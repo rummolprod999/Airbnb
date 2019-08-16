@@ -4,14 +4,14 @@ import anbapp.Arguments
 import anbapp.builderApp.BuilderApp
 import anbapp.logger.logger
 import anbapp.parsers.IParser
-import anbapp.parsers.ParserAnb
+import anbapp.parsers.ParserAnbNew
 
 class Executor {
     lateinit var p: IParser
 
     init {
         when (BuilderApp.arg) {
-            Arguments.ANB -> run { p = ParserAnb(); executeParser(p) { parser() } }
+            Arguments.ANB -> run { p = ParserAnbNew(); executeParser(p) { parser() } }
         }
     }
 

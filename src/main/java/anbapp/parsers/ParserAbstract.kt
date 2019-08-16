@@ -4,8 +4,10 @@ import anbapp.builderApp.BuilderApp
 import anbapp.documents.AbstractDocument
 import anbapp.documents.IDocument
 import anbapp.logger.logger
+import com.google.gson.annotations.SerializedName
 import java.sql.Connection
 import java.sql.DriverManager
+import java.util.*
 
 
 abstract class ParserAbstract {
@@ -39,5 +41,29 @@ abstract class ParserAbstract {
             }
         })
         return arr
+    }
+
+    class DayAnb {
+        var date: String? = null
+        var available: Boolean? = null
+        @SerializedName("min_nights")
+        var minNights: Int? = null
+        @SerializedName("available_for_checkin")
+        var availableForCheckin: Boolean? = null
+        var bookable: Boolean? = null
+    }
+
+    class CalendarMonths {
+        @SerializedName("calendar_months")
+        var calendarMonths: ArrayList<Month>? = null
+    }
+
+    class Month {
+        var month: Int? = null
+        var year: Int? = null
+        var days: ArrayList<DayAnb>? = null
+    }
+
+    data class Day(val date: Date, val available: Boolean, val minNights: Int, val availableForCheckin: Boolean?, val bookable: Boolean?) {
     }
 }
