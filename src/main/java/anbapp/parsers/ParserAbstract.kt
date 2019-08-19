@@ -17,8 +17,7 @@ abstract class ParserAbstract {
     fun parse(fn: () -> Unit) {
         logger("Начало парсинга")
         fn()
-        logger("Добавили документов ${AbstractDocument.AddTender}")
-        logger("Обновили документов ${AbstractDocument.UpdateTender}")
+        logger("Обновили документов ${AbstractDocument.AddDoc}")
         logger("Конец парсинга")
     }
 
