@@ -5,6 +5,7 @@ import anbapp.parsers.ParserAbstract
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
+import java.sql.Timestamp
 
 class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument() {
     override fun parsing() {
@@ -63,7 +64,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
             stmt1.close()
             rsoi.close()
             d.calendars.forEach {
-                val stmt2 = con.prepareStatement("INSERT INTO days SET id_checkup = ?, available = ?, min_nights = ?, available_for_checkin = ?, bookable = ?")
+                val stmt2 = con.prepareStatement("INSERT INTO days SET id_checkup = ?, available = ?, min_nights = ?, available_for_checkin = ?, bookable = ?, date = ?")
                 stmt2.setInt(1, idCheck)
                 stmt2.setInt(2, if (it.available) {
                     1
@@ -81,6 +82,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                 } else {
                     0
                 })
+                stmt2.setTimestamp(6, Timestamp(it.date.time))
                 stmt2.executeUpdate()
             }
 
