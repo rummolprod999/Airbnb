@@ -73,7 +73,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>parser.AppKt</mainClass>
+                                    <mainClass>anbapp.AppKt</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
