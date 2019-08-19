@@ -12,6 +12,7 @@ import java.util.*
 
 abstract class ParserAbstract {
     data class RoomAnb(val Id: Int, val Url: String, var calendars: List<String>)
+    data class Price(val checkIn: String, val checkOut: String, val priceUsd: String)
 
     fun parse(fn: () -> Unit) {
         logger("Начало парсинга")
@@ -66,4 +67,32 @@ abstract class ParserAbstract {
 
     data class Day(val date: Date, val available: Boolean, val minNights: Int, val availableForCheckin: Boolean?, val bookable: Boolean?) {
     }
+
+    class PdpListingBookingDetails {
+        @SerializedName("pdp_listing_booking_details")
+        var pdpListingBookingDetails: ArrayList<Details>? = null
+    }
+
+    class Details {
+        @SerializedName("check_in")
+        var checkIn: String? = null
+        @SerializedName("check_out")
+        var checkOut: String? = null
+        var price: PriceItems? = null
+    }
+
+    class PriceItems {
+        @SerializedName("price_items")
+        var priceItems: ArrayList<PriceItem>? = null
+    }
+
+    class PriceItem {
+        var total: Total? = null
+    }
+
+    class Total {
+        @SerializedName("amount_formatted")
+        var amountFormatted: String? = null
+    }
+
 }
