@@ -1,5 +1,6 @@
 package anbapp.parsers
 
+import anbapp.documents.AnbDocument
 import anbapp.exstensions.getDataFromRegexp
 import anbapp.exstensions.getDateFromString
 import anbapp.httpTools.downloadFromUrl
@@ -48,8 +49,23 @@ class ParserAnbNew : IParser, ParserAbstract() {
         val needMonth = calendar.calendarMonths?.filter { it.month == dateNow.monthValue }?.first()?.days?.map { Day(it.date?.getDateFromString(formatter)!!, it.available!!, it.minNights!!, it.availableForCheckin, it.bookable) }?.sortedBy { it.date }
                 ?: throw Exception("needMonth is empty, url - $calUrl")
         val firstAv = needMonth.firstOrNull { it.available && it.availableForCheckin ?: false && it.bookable ?: false }
-        val price = firstAv?.run { getPrice(firstAv, roomId) } ?: Price("", "", "")
-
+        val price = firstAv?.run { getPrice(firstAv, roomId) } ?: Price("нет данных", "нет данных", "нет данных")
+        var owner = ""
+        var apartName = ""
+        if (!existNameAndOwner(room.Id)) {
+            val pagetext = downloadFromUrl(room.Url)
+            if (pagetext == "") {
+                logger("pagetext is empty ${room.Url}")
+            } else {
+                apartName = pagetext.getDataFromRegexp("""<title>(.+)</title>""")
+                owner = pagetext.getDataFromRegexp(""""host_name":"(.+?)"""")
+            }
+        }
+        room.price = price
+        room.owner = owner
+        room.appName = apartName
+        room.calendars = needMonth
+        ParserDocument(AnbDocument(room))
     }
 
     private fun getPrice(d: Day, roomId: String): Price {
@@ -59,7 +75,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
         val jsonPrice = downloadFromUrl(priceUrl)
         if (jsonPrice == "") {
             logger("jsonPrice is empty $priceUrl")
-            return Price("", "", "")
+            return Price("ошибка", "ошибка", "ошибка")
         }
         val gson = Gson()
         val price = gson.fromJson(jsonPrice, PdpListingBookingDetails::class.java)

@@ -11,7 +11,7 @@ import java.util.*
 
 
 abstract class ParserAbstract {
-    data class RoomAnb(val Id: Int, val Url: String, var calendars: List<String>)
+    data class RoomAnb(val Id: Int, val Url: String, var calendars: List<Day>, var price: Price, var owner: String, var appName: String)
     data class Price(val checkIn: String, val checkOut: String, val priceUsd: String)
 
     fun parse(fn: () -> Unit) {
@@ -38,10 +38,26 @@ abstract class ParserAbstract {
             while (res.next()) {
                 val id = res.getInt(1)
                 val url = res.getString(2)
-                arr.add(RoomAnb(id, url, listOf()))
+                arr.add(RoomAnb(id, url, listOf(), Price("", "", ""), "", ""))
             }
         })
         return arr
+    }
+
+    fun existNameAndOwner(id: Int): Boolean {
+        var b = true
+        DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
+            val res = con.prepareStatement("SELECT owner, apartment_name FROM anb_url WHERE id = ?").apply { setInt(1, id) }.executeQuery()
+            while (res.next()) {
+                val owner = res.getString(1)
+                val appName = res.getString(2)
+                if (owner == "" && appName == "") {
+                    b = false
+                }
+            }
+
+        })
+        return b
     }
 
     class DayAnb {

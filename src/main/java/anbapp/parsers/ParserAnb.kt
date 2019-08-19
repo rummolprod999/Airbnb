@@ -65,7 +65,7 @@ class ParserAnb : IParser, ParserAbstract() {
         wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("(//table[@role=\"presentation\"]/..)[2]")))
         val cal = driver.findElementByXPath("(//table[@role=\"presentation\"]/..)[2]")
         val calInnerHtml = cal.getAttribute("outerHTML")
-        room.calendars = listOf(calInnerHtml)
+        //room.calendars = listOf(calInnerHtml)
         getPrices(room)
     }
 
