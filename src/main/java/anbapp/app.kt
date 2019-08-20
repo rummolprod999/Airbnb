@@ -5,6 +5,7 @@ import anbapp.executor.Executor
 
 
 fun main(args: Array<String>) {
-    Builder(args)
+    val b = Builder(args)
+    b.deleteBigLog()
     Executor()
 }

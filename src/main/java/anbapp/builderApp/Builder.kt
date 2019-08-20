@@ -6,7 +6,6 @@ import com.google.gson.stream.JsonReader
 import java.io.File
 import java.io.FileReader
 import java.text.SimpleDateFormat
-import java.util.*
 import kotlin.system.exitProcess
 
 
@@ -81,7 +80,18 @@ class Builder(args: Array<String>) {
             log.mkdir()
         }
         val dateFormat = SimpleDateFormat("yyyy-MM-dd")
-        LogFile = "$LogPath${File.separator}log_parsing_${arg}_${dateFormat.format(Date())}.log"
+        LogFile = "$LogPath${File.separator}log_parsing_${arg}.log"
+    }
+
+    public fun deleteBigLog() {
+        val log = File(LogFile)
+        if (log.exists() && log.length() > 1_000_000L) {
+            try {
+                log.delete()
+            } catch (e: Exception) {
+                println(e)
+            }
+        }
     }
 
     private fun createObj() {
