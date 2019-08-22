@@ -39,7 +39,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
             logger("Bad Url, roomId was not found ${room.Url}")
             return
         }
-        val calUrl = "https://www.airbnb.com/api/v2/homes_pdp_availability_calendar?currency=USA&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&locale=en&listing_id=$roomId&month=${dateNow.monthValue}&year=${dateNow.year}&count=6"
+        val calUrl = "https://www.airbnb.com/api/v2/homes_pdp_availability_calendar?currency=USA&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&locale=en&listing_id=$roomId&month=${dateNow.monthValue}&year=${dateNow.year}&count=8"
         val jsonCal = downloadFromUrl(calUrl)
         if (jsonCal == "") {
             logger("jsonCal is empty $calUrl")
@@ -47,10 +47,11 @@ class ParserAnbNew : IParser, ParserAbstract() {
         }
         val gson = Gson()
         val calendar = gson.fromJson(jsonCal, CalendarMonths::class.java)
-        val needMonth = calendar.calendarMonths?.fold(mutableListOf<DayAnb>()) { total, month -> total.addAll(month.days!!); total }?.map { Day(it.date?.getDateFromString(formatter)!!, it.available!!, it.minNights!!, it.availableForCheckin, it.bookable) }?.sortedBy { it.date }
+        val needMonth = calendar.calendarMonths?.fold(mutableListOf<DayAnb>()) { total, month -> total.addAll(month.days!!); total }?.map { Day(it.date?.getDateFromString(formatter)!!, it.available!!, it.minNights!!, it.availableForCheckin, it.bookable, it.price!!.localPriceFormatted!!) }?.sortedBy { it.date }
                 ?: throw Exception("needMonth is empty, url - $calUrl")
         val firstAv = needMonth.firstOrNull { it.available && it.availableForCheckin ?: false && it.bookable ?: false }
-        val price = firstAv?.run { getPrice(firstAv, roomId) } ?: Price("нет данных", "нет данных", "нет данных")
+        val price = firstAv?.run { getPrice(firstAv, roomId) }
+                ?: Price("недоступно для заказа", "недоступно для заказа", "недоступно для заказа")
         var owner = ""
         var apartName = ""
         if (!existNameAndOwner(room.Id)) {

@@ -67,6 +67,13 @@ abstract class ParserAbstract {
         @SerializedName("available_for_checkin")
         var availableForCheckin: Boolean? = null
         var bookable: Boolean? = null
+        var price: priceCal? = null
+    }
+
+    class priceCal {
+
+        @SerializedName("local_price_formatted")
+        var localPriceFormatted: String? = null
     }
 
     class CalendarMonths {
@@ -80,7 +87,7 @@ abstract class ParserAbstract {
         var days: ArrayList<DayAnb>? = null
     }
 
-    data class Day(val date: Date, val available: Boolean, val minNights: Int, val availableForCheckin: Boolean?, val bookable: Boolean?) {
+    data class Day(val date: Date, val available: Boolean, val minNights: Int, val availableForCheckin: Boolean?, val bookable: Boolean?, val price: String?) {
     }
 
     class PdpListingBookingDetails {
