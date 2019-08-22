@@ -15,6 +15,7 @@ private const val timeoutD = 3000L
 
 fun downloadFromUrl(urls: String, i: Int = 5, wt: Long = 3000): String {
     var count = 0
+    var waitTime = wt
     while (true) {
         //val i = 50
         if (count >= i) {
@@ -45,7 +46,8 @@ fun downloadFromUrl(urls: String, i: Int = 5, wt: Long = 3000): String {
         } catch (e: Exception) {
             logger(e, e.stackTrace)
             count++
-            sleep(wt)
+            sleep(waitTime)
+            waitTime += 5000
         }
 
     }

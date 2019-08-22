@@ -26,6 +26,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
         getUrlArray().forEach {
             try {
                 getCalendar(it)
+                Thread.sleep(10_000L)
             } catch (e: Exception) {
                 logger("Error in getCalendar function", e.stackTrace, e)
             }
