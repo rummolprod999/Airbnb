@@ -22,10 +22,10 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                 p0.close()
                 stmt0.close()
             }
-            val changes = if (currChanges != dbChanges) {
-                "Новая бронь"
-            } else {
-                ""
+            val changes = when {
+                currChanges < dbChanges -> "Новая бронь"
+                currChanges > dbChanges -> "Снятие брони"
+                else -> ""
             }
             val p6 = con.prepareStatement("UPDATE anb_url SET changes = ? WHERE id = ?")
             p6.setString(1, changes)
