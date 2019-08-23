@@ -32,6 +32,14 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
             p6.setInt(2, d.Id)
             p6.executeUpdate()
             p6.close()
+            if (d.owner != "" || d.appName != "") {
+                val p1 = con.prepareStatement("UPDATE anb_url SET owner = ?, apartment_name = ? WHERE id = ?")
+                p1.setString(1, d.owner)
+                p1.setString(2, d.appName)
+                p1.setInt(3, d.Id)
+                p1.executeUpdate()
+                p1.close()
+            }
             var changePrice = ""
             val ddd = Date()
             val currDay = d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.firstOrNull { it.date.date == ddd.date && it.date.month == ddd.month && it.date.year == ddd.year }
