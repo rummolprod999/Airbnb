@@ -24,7 +24,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
             }
             val changes = when {
                 currChanges < dbChanges -> "Новая бронь"
-                currChanges > dbChanges -> "Снятие брони"
+                currChanges > dbChanges -> ""
                 else -> ""
             }
             val p6 = con.prepareStatement("UPDATE anb_url SET changes = ? WHERE id = ?")

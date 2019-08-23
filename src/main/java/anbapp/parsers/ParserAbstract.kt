@@ -117,4 +117,21 @@ abstract class ParserAbstract {
         var amountFormatted: String? = null
     }
 
+    class ListingAnb {
+        var listing: Listing? = null
+    }
+
+    class Listing {
+        var name: String? = null
+        var user: User1? = null
+    }
+
+    class User1 {
+        var user: User2? = null
+    }
+
+    class User2 {
+        @SerializedName("first_name")
+        var firstName: String? = null
+    }
 }

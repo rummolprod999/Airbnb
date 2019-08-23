@@ -55,13 +55,22 @@ class ParserAnbNew : IParser, ParserAbstract() {
         var owner = ""
         var apartName = ""
         if (!existNameAndOwner(room.Id)) {
-            val pagetext = downloadFromUrl(room.Url)
+            /*val pagetext = downloadFromUrl(room.Url)
             if (pagetext == "") {
                 logger("pagetext is empty ${room.Url}")
             } else {
                 apartName = pagetext.getDataFromRegexp("""<title>(.+)</title>""")
                 owner = pagetext.getDataFromRegexp(""""host_name":"(.+?)"""")
+            }*/
+            val urlListing = "https://www.airbnb.com/api/v1/listings/$roomId?key=d306zoyjsyarp7ifhu67rjxn52tv0t20"
+            val jsonListing = downloadFromUrl(urlListing)
+            if (jsonListing == "") {
+                logger("jsonCal is empty $urlListing")
             }
+            val gsonListing = Gson()
+            val listing = gsonListing.fromJson(jsonListing, ListingAnb::class.java)
+            owner = listing?.listing?.user?.user?.firstName ?: ""
+            apartName = listing?.listing?.name ?: ""
         }
         room.price = price
         room.owner = owner
