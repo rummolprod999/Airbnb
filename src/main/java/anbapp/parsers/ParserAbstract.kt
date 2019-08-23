@@ -12,7 +12,7 @@ import java.util.*
 
 abstract class ParserAbstract {
     data class RoomAnb(val Id: Int, val Url: String, var calendars: List<Day>, var price: Price, var owner: String, var appName: String)
-    data class Price(val checkIn: String, val checkOut: String, val priceUsd: String)
+    data class Price(val checkIn: String, val checkOut: String, val priceUsd: String, val checkInFirst15: String, val checkOutFirst15: String, val priceUsdFirst15: String, val checkInSecond15: String, val checkOutSecond15: String, val priceUsdSecond15: String, val checkIn30: String, val checkOut30: String, val priceUsd30: String)
 
     fun parse(fn: () -> Unit) {
         logger("Начало парсинга")
@@ -37,7 +37,7 @@ abstract class ParserAbstract {
             while (res.next()) {
                 val id = res.getInt(1)
                 val url = res.getString(2)
-                arr.add(RoomAnb(id, url, listOf(), Price("", "", ""), "", ""))
+                arr.add(RoomAnb(id, url, listOf(), Price("", "", "", "", "", "", "", "", "", "", "", ""), "", ""))
             }
         })
         return arr

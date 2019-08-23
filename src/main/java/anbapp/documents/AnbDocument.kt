@@ -65,11 +65,20 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
             }
             AddDoc++
             var idCheck = 0
-            val stmt1 = con.prepareStatement("INSERT INTO checkup SET iid_anb = ?, price = ?, check_in = ?, check_out = ?, date_last = NOW()", Statement.RETURN_GENERATED_KEYS)
+            val stmt1 = con.prepareStatement("INSERT INTO checkup SET iid_anb = ?, price = ?, check_in = ?, check_out = ?, price_first_15 = ?, check_in_first_15 = ?, check_out_first_15 = ?, price_second_15 = ?, check_in_second_15 = ?, check_out_second_15 = ?, price_30 = ?, check_in_30 = ?, check_out_30 = ?, date_last = NOW()", Statement.RETURN_GENERATED_KEYS)
             stmt1.setInt(1, d.Id)
             stmt1.setString(2, d.price.priceUsd)
             stmt1.setString(3, d.price.checkIn)
             stmt1.setString(4, d.price.checkOut)
+            stmt1.setString(5, d.price.priceUsdFirst15)
+            stmt1.setString(6, d.price.checkInFirst15)
+            stmt1.setString(7, d.price.checkOutFirst15)
+            stmt1.setString(8, d.price.priceUsdSecond15)
+            stmt1.setString(9, d.price.checkInSecond15)
+            stmt1.setString(10, d.price.checkOutSecond15)
+            stmt1.setString(11, d.price.priceUsd30)
+            stmt1.setString(12, d.price.checkIn30)
+            stmt1.setString(13, d.price.checkOut30)
             stmt1.executeUpdate()
             val rsoi = stmt1.generatedKeys
             if (rsoi.next()) {
