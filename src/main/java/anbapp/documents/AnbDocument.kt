@@ -23,7 +23,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                 stmt0.close()
             }
             val changes = when {
-                currChanges < dbChanges -> "Новая бронь"
+                currChanges < dbChanges -> "Новая бронь(${dbChanges - currChanges})"
                 currChanges > dbChanges -> ""
                 else -> ""
             }
