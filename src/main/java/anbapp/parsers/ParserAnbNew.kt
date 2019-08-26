@@ -94,53 +94,72 @@ class ParserAnbNew : IParser, ParserAbstract() {
         val checkOut = price.pdpListingBookingDetails?.first()?.checkOut ?: ""
         val priceUsd = price.pdpListingBookingDetails?.first()?.price?.priceItems?.first()?.total?.amountFormatted ?: ""
 
-        val dayMonth1 = dateNow.withDayOfMonth(1)
-        val dayMonth15 = dateNow.withDayOfMonth(15)
-        val priceUrl15 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth1.format(customFormatter)}&check_out=${dayMonth15.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
-        val jsonPrice15 = downloadFromUrl(priceUrl15)
-        if (jsonPrice15 == "") {
-            logger("jsonPrice15 is empty $priceUrl15")
-            throw Exception("jsonPrice15 is empty")
-        }
-        val gson15 = Gson()
-        val price15 = gson15.fromJson(jsonPrice15, PdpListingBookingDetails::class.java)
-        val checkIn15 = price15.pdpListingBookingDetails?.first()?.checkIn ?: ""
-        val checkOut15 = price15.pdpListingBookingDetails?.first()?.checkOut ?: ""
-        val priceUsd15 = price15.pdpListingBookingDetails?.first()?.price?.priceItems?.first()?.total?.amountFormatted
-                ?: ""
+        var checkIn15 = ""
+        var checkOut15 = ""
+        var priceUsd15 = ""
 
-        val dayMonth16 = dateNow.withDayOfMonth(16)
-        //val dayMonthLast = dateNow.withDayOfMonth(dateNow.lengthOfMonth())
-        val dayMonthLast = if (dateNow.month == java.time.Month.FEBRUARY) {
-            dateNow.withDayOfMonth(dateNow.lengthOfMonth())
-        } else {
-            dateNow.withDayOfMonth(30)
-        }
-        val priceUrl16 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth16.format(customFormatter)}&check_out=${dayMonthLast.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
-        val jsonPrice16 = downloadFromUrl(priceUrl16)
-        if (jsonPrice16 == "") {
-            logger("jsonPrice16 is empty $priceUrl16")
-            throw Exception("jsonPrice16 is empty")
-        }
-        val gson16 = Gson()
-        val price16 = gson16.fromJson(jsonPrice16, PdpListingBookingDetails::class.java)
-        val checkIn16 = price16.pdpListingBookingDetails?.first()?.checkIn ?: ""
-        val checkOut16 = price16.pdpListingBookingDetails?.first()?.checkOut ?: ""
-        val priceUsd16 = price16.pdpListingBookingDetails?.first()?.price?.priceItems?.first()?.total?.amountFormatted
-                ?: ""
+        var checkIn16 = ""
+        var checkOut16 = ""
+        var priceUsd16 = ""
 
-        val priceUrl30 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth1.format(customFormatter)}&check_out=${dayMonthLast.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
-        val jsonPrice30 = downloadFromUrl(priceUrl30)
-        if (jsonPrice30 == "") {
-            logger("jsonPrice30 is empty $priceUrl30")
-            throw Exception("jsonPrice30 is empty")
+        var checkIn30 = ""
+        var checkOut30 = ""
+        var priceUsd30 = ""
+
+        (0..7).forEach {
+            val cDate = if (it == 0) {
+                dateNow
+            } else {
+                dateNow.plusMonths(it.toLong())
+            }
+            val dayMonth1 = cDate.withDayOfMonth(1)
+            val dayMonth15 = cDate.withDayOfMonth(15)
+            val priceUrl15 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth1.format(customFormatter)}&check_out=${dayMonth15.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+            val jsonPrice15 = downloadFromUrl(priceUrl15)
+            if (jsonPrice15 == "") {
+                logger("jsonPrice15 is empty $priceUrl15")
+                throw Exception("jsonPrice15 is empty")
+            }
+            val gson15 = Gson()
+            val price15 = gson15.fromJson(jsonPrice15, PdpListingBookingDetails::class.java)
+            checkIn15 += (price15.pdpListingBookingDetails?.first()?.checkIn ?: "") + ","
+            checkOut15 += (price15.pdpListingBookingDetails?.first()?.checkOut ?: "") + ","
+            priceUsd15 += (price15.pdpListingBookingDetails?.first()?.price?.priceItems?.first()?.total?.amountFormatted
+                    ?: "") + ","
+
+            val dayMonth16 = cDate.withDayOfMonth(16)
+            val dayMonthLast = if (cDate.month == java.time.Month.FEBRUARY) {
+                cDate.withDayOfMonth(cDate.lengthOfMonth())
+            } else {
+                cDate.withDayOfMonth(30)
+            }
+            val priceUrl16 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth16.format(customFormatter)}&check_out=${dayMonthLast.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+            val jsonPrice16 = downloadFromUrl(priceUrl16)
+            if (jsonPrice16 == "") {
+                logger("jsonPrice16 is empty $priceUrl16")
+                throw Exception("jsonPrice16 is empty")
+            }
+            val gson16 = Gson()
+            val price16 = gson16.fromJson(jsonPrice16, PdpListingBookingDetails::class.java)
+            checkIn16 += (price16.pdpListingBookingDetails?.first()?.checkIn ?: "") + ","
+            checkOut16 += (price16.pdpListingBookingDetails?.first()?.checkOut ?: "") + ","
+            priceUsd16 += (price16.pdpListingBookingDetails?.first()?.price?.priceItems?.first()?.total?.amountFormatted
+                    ?: "") + ","
+
+            val priceUrl30 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth1.format(customFormatter)}&check_out=${dayMonthLast.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+            val jsonPrice30 = downloadFromUrl(priceUrl30)
+            if (jsonPrice30 == "") {
+                logger("jsonPrice30 is empty $priceUrl30")
+                throw Exception("jsonPrice30 is empty")
+            }
+            val gson30 = Gson()
+            val price30 = gson30.fromJson(jsonPrice30, PdpListingBookingDetails::class.java)
+            checkIn30 += (price30.pdpListingBookingDetails?.first()?.checkIn ?: "") + ","
+            checkOut30 += (price30.pdpListingBookingDetails?.first()?.checkOut ?: "") + ","
+            priceUsd30 += (price30.pdpListingBookingDetails?.first()?.price?.priceItems?.first()?.total?.amountFormatted
+                    ?: "") + ","
         }
-        val gson30 = Gson()
-        val price30 = gson30.fromJson(jsonPrice30, PdpListingBookingDetails::class.java)
-        val checkIn30 = price30.pdpListingBookingDetails?.first()?.checkIn ?: ""
-        val checkOut30 = price30.pdpListingBookingDetails?.first()?.checkOut ?: ""
-        val priceUsd30 = price30.pdpListingBookingDetails?.first()?.price?.priceItems?.first()?.total?.amountFormatted
-                ?: ""
+
 
         return Price(checkIn, checkOut, priceUsd, checkIn15, checkOut15, priceUsd15, checkIn16, checkOut16, priceUsd16, checkIn30, checkOut30, priceUsd30)
     }
