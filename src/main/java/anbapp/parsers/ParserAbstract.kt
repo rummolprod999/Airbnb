@@ -87,7 +87,7 @@ abstract class ParserAbstract {
         var days: ArrayList<DayAnb>? = null
     }
 
-    data class Day(val date: Date, val available: Boolean, val minNights: Int, val availableForCheckin: Boolean?, val bookable: Boolean?, val price: String?) {
+    data class Day(val date: Date, var available: Boolean, val minNights: Int, val availableForCheckin: Boolean?, val bookable: Boolean?, val price: String?) {
     }
 
     class PdpListingBookingDetails {

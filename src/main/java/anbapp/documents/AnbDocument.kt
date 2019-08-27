@@ -23,7 +23,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                 stmt0.close()
             }
             val changes = when {
-                currChanges < dbChanges -> "Новая бронь(${dbChanges - currChanges})"
+                currChanges < dbChanges && ((dbChanges - currChanges) > 1) -> "Новая бронь(${dbChanges - currChanges})"
                 currChanges > dbChanges -> ""
                 else -> ""
             }
@@ -86,6 +86,11 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
             }
             stmt1.close()
             rsoi.close()
+            d.calendars.map {
+                if (it.date.before(Date())) {
+                    it.available = false
+                }
+            }
             d.calendars.forEach {
                 val stmt2 = con.prepareStatement("INSERT INTO days SET id_checkup = ?, available = ?, min_nights = ?, available_for_checkin = ?, bookable = ?, date = ?, price_day = ?")
                 stmt2.setInt(1, idCheck)
