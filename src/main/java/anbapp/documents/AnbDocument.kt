@@ -57,10 +57,11 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
             }
             val cD = Date()
             if (changePrice == "") {
-                for (tt in d.calendars.filter { it.date.after(cD) || (it.date.date == cD.date && it.date.month == cD.month && it.date.year == cD.year) }) {
+                d.calendars.filter { it.date.after(cD) || (it.date.date == cD.date && it.date.month == cD.month && it.date.year == cD.year) }.forEach { tt ->
                     d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.filter { it.date.after(cD) || it.date == cD }.firstOrNull { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == tt.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().plusDays(1L) }?.run {
-                        if (price != tt.price && changePrice == "") {
+                        if (price != tt.price) {
                             changePrice = "${ParserAnbNew.formatter.format(tt.date)} было: ${tt.price} <br>${ParserAnbNew.formatter.format(date)} стало: $price"
+                            return@forEach
                         }
                     }
                 }
