@@ -2,12 +2,10 @@ package anbapp.documents
 
 import anbapp.builderApp.BuilderApp
 import anbapp.parsers.ParserAbstract
-import anbapp.parsers.ParserAnbNew
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
 import java.sql.Timestamp
-import java.time.ZoneId
 import java.util.*
 
 class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument() {
@@ -55,7 +53,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                 }
 
             }
-            val cD = Date()
+            /*val cD = Date()
             if (changePrice == "") {
                 d.calendars.filter { it.date.after(cD) || (it.date.date == cD.date && it.date.month == cD.month && it.date.year == cD.year) }.forEach { tt ->
                     d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.filter { it.date.after(cD) || it.date == cD }.firstOrNull { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == tt.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().plusDays(1L) }?.run {
@@ -65,7 +63,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                         }
                     }
                 }
-            }
+            }*/
             val p7 = con.prepareStatement("UPDATE anb_url SET change_price = ? WHERE id = ?")
             p7.setString(1, changePrice)
             p7.setInt(2, d.Id)
