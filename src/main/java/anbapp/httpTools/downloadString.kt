@@ -13,7 +13,7 @@ import java.util.concurrent.TimeoutException
 
 private const val timeoutD = 3000L
 
-fun downloadFromUrl(urls: String, i: Int = 5, wt: Long = 3000): String {
+fun downloadFromUrl(urls: String, i: Int = 10, wt: Long = 3000): String {
     var count = 0
     var waitTime = wt
     while (true) {
@@ -44,7 +44,8 @@ fun downloadFromUrl(urls: String, i: Int = 5, wt: Long = 3000): String {
             return s
 
         } catch (e: Exception) {
-            logger(e, e.stackTrace)
+            //logger(e, e.stackTrace)
+            logger(e)
             count++
             sleep(waitTime)
             waitTime += 5000
