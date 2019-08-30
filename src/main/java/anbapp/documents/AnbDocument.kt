@@ -75,6 +75,14 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                 }
                 changePrice += lp
             }
+            for (lp in listPrice) {
+                con.prepareStatement("INSERT INTO price_changes(id_url, price) VALUES (?, ?)").apply {
+                    setInt(1, d.Id)
+                    setString(2, lp)
+                    executeUpdate()
+                    close()
+                }
+            }
             val p7 = con.prepareStatement("UPDATE anb_url SET change_price = ? WHERE id = ?")
             p7.setString(1, changePrice)
             p7.setInt(2, d.Id)
