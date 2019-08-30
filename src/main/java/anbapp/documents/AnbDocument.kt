@@ -2,10 +2,12 @@ package anbapp.documents
 
 import anbapp.builderApp.BuilderApp
 import anbapp.parsers.ParserAbstract
+import anbapp.parsers.ParserAnbNew
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
 import java.sql.Timestamp
+import java.time.ZoneId
 import java.util.*
 
 class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument() {
@@ -45,25 +47,34 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
             val currDay = d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.firstOrNull { it.date.date == ddd.date && it.date.month == ddd.month && it.date.year == ddd.year }
             val currPrice = currDay?.price
                     ?: ""
-            if (currDay != null && currDay.date.date != 1) {
+            /*if (currDay != null && currDay.date.date != 1) {
                 val prevPrice = d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.firstOrNull { it.date.date == currDay.date.date - 1 && it.date.month == currDay.date.month && it.date.year == currDay.date.year }?.price
                         ?: ""
                 if (currPrice != "" && prevPrice != "" && currPrice != prevPrice) {
                     changePrice = "Было: $prevPrice <br>Стало: $currPrice"
                 }
 
-            }
-            /*val cD = Date()
-            if (changePrice == "") {
-                d.calendars.filter { it.date.after(cD) || (it.date.date == cD.date && it.date.month == cD.month && it.date.year == cD.year) }.forEach { tt ->
-                    d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.filter { it.date.after(cD) || it.date == cD }.firstOrNull { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == tt.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().plusDays(1L) }?.run {
-                        if (price != tt.price) {
-                            changePrice = "${ParserAnbNew.formatter.format(tt.date)} было: ${tt.price} <br>${ParserAnbNew.formatter.format(date)} стало: $price"
-                            return@forEach
-                        }
+            }*/
+            val cD = Date()
+            val listPrice = mutableListOf<String>()
+            d.calendars.filter { it.date.after(cD) || (it.date.date == cD.date && it.date.month == cD.month && it.date.year == cD.year) }.forEach { tt ->
+                d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.filter { it.date.after(cD) || it.date == cD }.firstOrNull { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == tt.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().plusDays(1L) }?.run {
+                    if (price != tt.price) {
+                        listPrice.add("${ParserAnbNew.formatter.format(tt.date)} было: ${tt.price} -- ${ParserAnbNew.formatter.format(date)} стало: $price<br><br>")
                     }
                 }
-            }*/
+            }
+            for (lp in listPrice) {
+                val stmt0 = con.prepareStatement("SELECT id FROM price_changes WHERE id_url = ? AND price = ?").apply {
+                    setInt(1, d.Id)
+                    setString(2, lp)
+                }
+                val p0 = stmt0.executeQuery()
+                if (p0.next()) {
+                    continue
+                }
+                changePrice += lp
+            }
             val p7 = con.prepareStatement("UPDATE anb_url SET change_price = ? WHERE id = ?")
             p7.setString(1, changePrice)
             p7.setInt(2, d.Id)
