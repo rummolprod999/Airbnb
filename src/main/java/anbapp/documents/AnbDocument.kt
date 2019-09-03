@@ -60,7 +60,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
             d.calendars.filter { it.date.after(cD) || (it.date.date == cD.date && it.date.month == cD.month && it.date.year == cD.year) }.forEach { tt ->
                 d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.filter { it.date.after(cD) || it.date == cD }.firstOrNull { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == tt.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().plusDays(1L) }?.let {
                     if (it.price != tt.price) {
-                        listPrice.add("${ParserAnbNew.formatter.format(tt.date)} было: ${tt.price} -- ${ParserAnbNew.formatter.format(it.date)} стало: ${it.price}<br><br>")
+                        listPrice.add("${ParserAnbNew.formatter.format(it.date)} было: ${tt.price} -- стало: ${it.price}<br><br>")
                     }
                 }
             }
