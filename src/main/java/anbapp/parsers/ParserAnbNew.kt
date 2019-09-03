@@ -28,7 +28,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
                 getCalendar(it)
                 Thread.sleep(10_000L)
             } catch (e: Exception) {
-                logger("Error in getCalendar function", e.stackTrace, e)
+                logger("Error in getCalendar function", e.stackTrace, e, it.Url)
             }
         }
     }
@@ -47,7 +47,16 @@ class ParserAnbNew : IParser, ParserAbstract() {
         }
         val gson = Gson()
         val calendar = gson.fromJson(jsonCal, CalendarMonths::class.java)
-        val needMonth = calendar.calendarMonths?.fold(mutableListOf<DayAnb>()) { total, month -> total.addAll(month.days!!); total }?.map { Day(it.date?.getDateFromString(formatter)!!, it.available!!, it.minNights!!, it.availableForCheckin, it.bookable, it.price!!.localPriceFormatted!!) }?.sortedBy { it.date }
+        val needMonth = calendar.calendarMonths?.fold(mutableListOf<DayAnb>()) { total, month ->
+            total.addAll(month.days ?: throw Exception("month.days is null")); total
+        }?.map {
+            Day(it.date?.getDateFromString(formatter)
+                    ?: throw Exception("it.date?.getDateFromString(formatter) is null $calUrl"), it.available
+                    ?: throw Exception("it.available is null $calUrl"), it.minNights
+                    ?: throw Exception("it.minNights is null $calUrl"), it.availableForCheckin, it.bookable, (it.price
+                    ?: throw Exception("it.price is null $calUrl")).localPriceFormatted
+                    ?: throw Exception("it.price.localPriceFormatted is null $calUrl"))
+        }?.sortedBy { it.date }
                 ?: throw Exception("needMonth is empty, url - $calUrl")
         val firstAv = needMonth.firstOrNull { it.available && it.availableForCheckin ?: false && it.bookable ?: false }
         val price = firstAv?.run { getPrice(firstAv, roomId) }
