@@ -7,7 +7,6 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
 import java.sql.Timestamp
-import java.time.ZoneId
 import java.util.*
 
 class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument() {
@@ -57,12 +56,31 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
             }*/
             val cD = Date()
             val listPrice = mutableListOf<String>()
-            d.calendars.filter { it.date.after(cD) || (it.date.date == cD.date && it.date.month == cD.month && it.date.year == cD.year) }.forEach { tt ->
+            /* d.calendars.filter { it.date.after(cD) || (it.date.date == cD.date && it.date.month == cD.month && it.date.year == cD.year) }.forEach { tt ->
                 d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.filter { it.date.after(cD) || it.date == cD }.firstOrNull { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == tt.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().plusDays(1L) }?.let {
                     if (it.price != tt.price) {
                         listPrice.add("${ParserAnbNew.formatter.format(it.date)} было: ${tt.price} -- стало: ${it.price}<br><br>")
                     }
                 }
+            }*/
+            d.calendars.filter { it.date.after(cD) || (it.date.date == cD.date && it.date.month == cD.month && it.date.year == cD.year) }.forEach {
+                val stmt0 = con.prepareStatement("SELECT price_day FROM days d JOIN checkup c on d.id_checkup = c.id JOIN anb_url au on c.iid_anb = au.id WHERE au.id = ? AND d.date = ?").apply {
+                    setInt(1, d.Id)
+                    setTimestamp(2, Timestamp(it.date.time))
+                }
+                val p0 = stmt0.executeQuery()
+                if (p0.next()) {
+                    val res = p0.getString(1)
+                    if (it.price != res) {
+                        listPrice.add("${ParserAnbNew.formatter.format(it.date)} $res -- ${it.price}<br><br>")
+                    }
+                    p0.close()
+                    stmt0.close()
+                } else {
+                    p0.close()
+                    stmt0.close()
+                }
+
             }
             for (lp in listPrice) {
                 val stmt0 = con.prepareStatement("SELECT id FROM price_changes WHERE id_url = ? AND price = ?").apply {
