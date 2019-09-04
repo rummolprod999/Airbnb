@@ -72,7 +72,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                 if (p0.next()) {
                     val res = p0.getString(1)
                     if (it.price != res) {
-                        listPrice.add("${ParserAnbNew.formatter.format(it.date)} $res -- ${it.price}<br><br>")
+                        listPrice.add("${ParserAnbNew.formatter.format(it.date)} $res -> ${it.price}<br><br>")
                     }
                     p0.close()
                     stmt0.close()
