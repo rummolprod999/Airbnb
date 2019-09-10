@@ -16,6 +16,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
         val dateNow = LocalDate.now()
         val customFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         var formatter = SimpleDateFormat("yyyy-MM-dd")
+        var currDate = Date()
     }
 
     override fun parser() = parse {
@@ -101,7 +102,8 @@ class ParserAnbNew : IParser, ParserAbstract() {
         val price = gson.fromJson(jsonPrice, PdpListingBookingDetails::class.java)
         val checkIn = price.pdpListingBookingDetails?.first()?.checkIn ?: ""
         val checkOut = price.pdpListingBookingDetails?.first()?.checkOut ?: ""
-        val priceUsd = price.pdpListingBookingDetails?.first()?.price?.priceItems?.first()?.total?.amountFormatted ?: ""
+        val priceUsd = price.pdpListingBookingDetails?.first()?.price?.priceItems?.first()?.total?.amountFormatted
+                ?: ""
 
         var checkIn15 = ""
         var checkOut15 = ""
