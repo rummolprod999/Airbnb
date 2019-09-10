@@ -19,7 +19,7 @@ fun downloadFromUrl(urls: String, i: Int = 10, wt: Long = 3000): String {
     while (true) {
         //val i = 50
         if (count >= i) {
-            logger(String.format("Не скачали строку за %d попыток", count), urls)
+            logger(String.format("Did not download the page in %d attempts", count), urls)
             break
         }
         try {

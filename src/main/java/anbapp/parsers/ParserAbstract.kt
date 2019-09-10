@@ -15,10 +15,10 @@ abstract class ParserAbstract {
     data class Price(val checkIn: String, val checkOut: String, val priceUsd: String, val checkInFirst15: String, val checkOutFirst15: String, val priceUsdFirst15: String, val checkInSecond15: String, val checkOutSecond15: String, val priceUsdSecond15: String, val checkIn30: String, val checkOut30: String, val priceUsd30: String)
 
     fun parse(fn: () -> Unit) {
-        logger("Начало парсинга")
+        logger("Start parsing")
         fn()
-        logger("Обновили документов ${AbstractDocument.AddDoc}")
-        logger("Конец парсинга")
+        logger("Updated documents ${AbstractDocument.AddDoc}")
+        logger("End parsing")
     }
 
     fun ParserDocument(t: IDocument) {

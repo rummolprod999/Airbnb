@@ -9,12 +9,12 @@ import java.sql.Statement
 import java.sql.Timestamp
 import java.util.*
 
-class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument() {
+class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument() {
     override fun parsing() {
-        val currChanges = d.calendars.filter { it.bookable == true && it.availableForCheckin == true }.count()
-        var dbChanges = 0
+        /*val currChanges = d.calendars.filter { it.bookable == true && it.availableForCheckin == true }.count()
+        var dbChanges = 0*/
         DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
-            val stmt0 = con.prepareStatement("SELECT COUNT(an.id) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND available_for_checkin = 1 AND bookable = 1").apply {
+            /*val stmt0 = con.prepareStatement("SELECT COUNT(an.id) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND available_for_checkin = 1 AND bookable = 1").apply {
                 setInt(1, d.Id)
             }
             val p0 = stmt0.executeQuery()
@@ -32,7 +32,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
             p6.setString(1, changes)
             p6.setInt(2, d.Id)
             p6.executeUpdate()
-            p6.close()
+            p6.close()*/
             if (d.owner != "" || d.appName != "") {
                 val p1 = con.prepareStatement("UPDATE anb_url SET owner = ?, apartment_name = ? WHERE id = ?")
                 p1.setString(1, d.owner)
@@ -63,7 +63,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                 }
             }*/
             var lastNumPars = 0
-            val stmtmp = con.prepareStatement("SELECT num_parsing FROM anb_url WHERE id").apply {
+            val stmtmp = con.prepareStatement("SELECT num_parsing FROM anb_url WHERE id = ?").apply {
                 setInt(1, d.Id)
             }
             val pmp = stmtmp.executeQuery()
@@ -84,7 +84,7 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                 if (p0.next()) {
                     val res = p0.getString(1)
                     if (it.price != res) {
-                        listPrice.add(PriceChange(it.price ?: "", it.date, cD))
+                        listPrice.add(PriceChange(it.price ?: "", res, it.date, cD))
                     }
                     p0.close()
                     stmt0.close()
@@ -106,9 +106,56 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                 changePrice += lp
             }*/
             for (lp in listPrice) {
-                con.prepareStatement("INSERT INTO price_changes(id_url, price, date_cal, date_parsing, num_parsing) VALUES (?, ?, ?, ?, ?)").apply {
+                con.prepareStatement("INSERT INTO price_changes(id_url, price, date_cal, date_parsing, num_parsing, price_was) VALUES (?, ?, ?, ?, ?, ?)").apply {
                     setInt(1, d.Id)
                     setString(2, lp.price)
+                    setTimestamp(3, Timestamp(lp.dateCal.time))
+                    setTimestamp(4, Timestamp(cD.time))
+                    setInt(5, lastNumPars + 1)
+                    setString(6, lp.priceWas)
+                    executeUpdate()
+                    close()
+                }
+            }
+            val listBookable = mutableListOf<BookingChange>()
+            d.calendars.filter { it.date.after(cD) }.forEach {
+                if (lastNumPars <= 0) {
+                    return@forEach
+                }
+                val stmt0 = con.prepareStatement("SELECT available_for_checkin, bookable FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND d.date = ?").apply {
+                    setInt(1, d.Id)
+                    setTimestamp(2, Timestamp(it.date.time))
+                }
+                val p0 = stmt0.executeQuery()
+                if (p0.next()) {
+                    val av = p0.getInt(1)
+                    val bok = p0.getInt(2)
+                    val itAv = if (it.availableForCheckin == true) {
+                        1
+                    } else {
+                        0
+                    }
+                    val itBok = if (it.bookable == true) {
+                        1
+                    } else {
+                        0
+                    }
+                    if ((av + bok) != (itAv + itBok)) {
+                        listBookable.add(BookingChange(1, it.date, cD))
+                    }
+                    p0.close()
+                    stmt0.close()
+                } else {
+                    p0.close()
+                    stmt0.close()
+                }
+
+            }
+
+            for (lp in listBookable) {
+                con.prepareStatement("INSERT INTO bookable_changes(id_url, booking, date_cal, date_parsing, num_parsing) VALUES (?, ?, ?, ?, ?)").apply {
+                    setInt(1, d.Id)
+                    setInt(2, lp.booking)
                     setTimestamp(3, Timestamp(lp.dateCal.time))
                     setTimestamp(4, Timestamp(cD.time))
                     setInt(5, lastNumPars + 1)
@@ -116,11 +163,11 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
                     close()
                 }
             }
-            val p7 = con.prepareStatement("UPDATE anb_url SET change_price = ? WHERE id = ?")
+            /*val p7 = con.prepareStatement("UPDATE anb_url SET change_price = ? WHERE id = ?")
             p7.setString(1, changePrice)
             p7.setInt(2, d.Id)
             p7.executeUpdate()
-            p7.close()
+            p7.close()*/
             con.prepareStatement("DELETE FROM checkup WHERE iid_anb = ?").apply {
                 setInt(1, d.Id)
                 executeUpdate()
@@ -184,5 +231,6 @@ class AnbDocument(val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument()
         })
     }
 
-    data class PriceChange(val price: String, val dateCal: Date, val dateParsing: Date)
+    data class PriceChange(val price: String, val priceWas: String, val dateCal: Date, val dateParsing: Date)
+    data class BookingChange(val booking: Int, val dateCal: Date, val dateParsing: Date)
 }
