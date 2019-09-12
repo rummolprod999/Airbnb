@@ -140,7 +140,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     } else {
                         0
                     }
-                    if ((av + bok) != (itAv + itBok)) {
+                    if (av == 1 && itAv == 0) {
                         listBookable.add(BookingChange(1, it.date, cD))
                     }
                     p0.close()
