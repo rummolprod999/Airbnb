@@ -122,7 +122,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 if (lastNumPars <= 0) {
                     return@forEach
                 }
-                val stmt0 = con.prepareStatement("SELECT available_for_checkin, bookable FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND d.date = ?").apply {
+                val stmt0 = con.prepareStatement("SELECT available, bookable FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND d.date = ?").apply {
                     setInt(1, d.Id)
                     setTimestamp(2, Timestamp(it.date.time))
                 }
