@@ -13,12 +13,13 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
     override fun parsing() {
         DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
             if (d.owner != "" || d.appName != "") {
-                val p1 = con.prepareStatement("UPDATE anb_url SET owner = ?, apartment_name = ? WHERE id = ?")
-                p1.setString(1, d.owner)
-                p1.setString(2, d.appName)
-                p1.setInt(3, d.Id)
-                p1.executeUpdate()
-                p1.close()
+                con.prepareStatement("UPDATE anb_url SET owner = ?, apartment_name = ? WHERE id = ?").apply {
+                    setString(1, d.owner)
+                    setString(2, d.appName)
+                    setInt(3, d.Id)
+                    executeUpdate()
+                    close()
+                }
             }
             var changePrice = ""
             var lastNumPars = 0
@@ -118,21 +119,22 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             }
             AddDoc++
             var idCheck = 0
-            val stmt1 = con.prepareStatement("INSERT INTO checkup SET iid_anb = ?, price = ?, check_in = ?, check_out = ?, price_first_15 = ?, check_in_first_15 = ?, check_out_first_15 = ?, price_second_15 = ?, check_in_second_15 = ?, check_out_second_15 = ?, price_30 = ?, check_in_30 = ?, check_out_30 = ?, date_last = NOW()", Statement.RETURN_GENERATED_KEYS)
-            stmt1.setInt(1, d.Id)
-            stmt1.setString(2, d.price.priceUsd)
-            stmt1.setString(3, d.price.checkIn)
-            stmt1.setString(4, d.price.checkOut)
-            stmt1.setString(5, d.price.priceUsdFirst15)
-            stmt1.setString(6, d.price.checkInFirst15)
-            stmt1.setString(7, d.price.checkOutFirst15)
-            stmt1.setString(8, d.price.priceUsdSecond15)
-            stmt1.setString(9, d.price.checkInSecond15)
-            stmt1.setString(10, d.price.checkOutSecond15)
-            stmt1.setString(11, d.price.priceUsd30)
-            stmt1.setString(12, d.price.checkIn30)
-            stmt1.setString(13, d.price.checkOut30)
-            stmt1.executeUpdate()
+            val stmt1 = con.prepareStatement("INSERT INTO checkup SET iid_anb = ?, price = ?, check_in = ?, check_out = ?, price_first_15 = ?, check_in_first_15 = ?, check_out_first_15 = ?, price_second_15 = ?, check_in_second_15 = ?, check_out_second_15 = ?, price_30 = ?, check_in_30 = ?, check_out_30 = ?, date_last = NOW()", Statement.RETURN_GENERATED_KEYS).apply {
+                setInt(1, d.Id)
+                setString(2, d.price.priceUsd)
+                setString(3, d.price.checkIn)
+                setString(4, d.price.checkOut)
+                setString(5, d.price.priceUsdFirst15)
+                setString(6, d.price.checkInFirst15)
+                setString(7, d.price.checkOutFirst15)
+                setString(8, d.price.priceUsdSecond15)
+                setString(9, d.price.checkInSecond15)
+                setString(10, d.price.checkOutSecond15)
+                setString(11, d.price.priceUsd30)
+                setString(12, d.price.checkIn30)
+                setString(13, d.price.checkOut30)
+                executeUpdate()
+            }
             val rsoi = stmt1.generatedKeys
             if (rsoi.next()) {
                 idCheck = rsoi.getInt(1)
@@ -145,27 +147,53 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 }
             }
             d.calendars.forEach {
-                val stmt2 = con.prepareStatement("INSERT INTO days SET id_checkup = ?, available = ?, min_nights = ?, available_for_checkin = ?, bookable = ?, date = ?, price_day = ?")
-                stmt2.setInt(1, idCheck)
-                stmt2.setInt(2, if (it.available) {
-                    1
-                } else {
-                    0
-                })
-                stmt2.setInt(3, it.minNights)
-                stmt2.setInt(4, if (it.availableForCheckin == true) {
-                    1
-                } else {
-                    0
-                })
-                stmt2.setInt(5, if (it.bookable == true) {
-                    1
-                } else {
-                    0
-                })
-                stmt2.setTimestamp(6, Timestamp(it.date.time))
-                stmt2.setString(7, it.price)
-                stmt2.executeUpdate()
+                con.prepareStatement("INSERT INTO days SET id_checkup = ?, available = ?, min_nights = ?, available_for_checkin = ?, bookable = ?, date = ?, price_day = ?").apply {
+                    setInt(1, idCheck)
+                    setInt(2, if (it.available) {
+                        1
+                    } else {
+                        0
+                    })
+                    setInt(3, it.minNights)
+                    setInt(4, if (it.availableForCheckin == true) {
+                        1
+                    } else {
+                        0
+                    })
+                    setInt(5, if (it.bookable == true) {
+                        1
+                    } else {
+                        0
+                    })
+                    setTimestamp(6, Timestamp(it.date.time))
+                    setString(7, it.price)
+                    executeUpdate()
+                }
+            }
+            con.prepareStatement("DELETE FROM price_cleaning WHERE id_url = ?").apply {
+                setInt(1, d.Id)
+                executeUpdate()
+                close()
+            }
+            con.prepareStatement("DELETE FROM discounts WHERE id_url = ?").apply {
+                setInt(1, d.Id)
+                executeUpdate()
+                close()
+            }
+            con.prepareStatement("INSERT INTO price_cleaning(id_url, price_cleaning) VALUES (?, ?)").apply {
+                setInt(1, d.Id)
+                setInt(2, d.cl.cleaning)
+                executeUpdate()
+                close()
+            }
+            d.cl.discounts.forEach {
+                con.prepareStatement("INSERT INTO discounts(id_url, discount, date_parsing) VALUES (?, ?, ?)").apply {
+                    setInt(1, d.Id)
+                    setString(2, it)
+                    setTimestamp(3, Timestamp(cD.time))
+                    executeUpdate()
+                    close()
+                }
             }
             val pend = con.prepareStatement("UPDATE anb_url SET num_parsing = num_parsing+1 WHERE id = ?")
             pend.setInt(1, d.Id)
