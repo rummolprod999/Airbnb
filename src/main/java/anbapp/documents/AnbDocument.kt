@@ -11,28 +11,7 @@ import java.util.*
 
 class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument() {
     override fun parsing() {
-        /*val currChanges = d.calendars.filter { it.bookable == true && it.availableForCheckin == true }.count()
-        var dbChanges = 0*/
         DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
-            /*val stmt0 = con.prepareStatement("SELECT COUNT(an.id) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND available_for_checkin = 1 AND bookable = 1").apply {
-                setInt(1, d.Id)
-            }
-            val p0 = stmt0.executeQuery()
-            if (p0.next()) {
-                dbChanges = p0.getInt(1)
-                p0.close()
-                stmt0.close()
-            }
-            val changes = when {
-                currChanges < dbChanges && ((dbChanges - currChanges) > 1) -> "Новая бронь(${dbChanges - currChanges})"
-                currChanges > dbChanges -> ""
-                else -> ""
-            }
-            val p6 = con.prepareStatement("UPDATE anb_url SET changes = ? WHERE id = ?")
-            p6.setString(1, changes)
-            p6.setInt(2, d.Id)
-            p6.executeUpdate()
-            p6.close()*/
             if (d.owner != "" || d.appName != "") {
                 val p1 = con.prepareStatement("UPDATE anb_url SET owner = ?, apartment_name = ? WHERE id = ?")
                 p1.setString(1, d.owner)
@@ -42,26 +21,6 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 p1.close()
             }
             var changePrice = ""
-            /*val ddd = Date()*/
-            /*val currDay = d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.firstOrNull { it.date.date == ddd.date && it.date.month == ddd.month && it.date.year == ddd.year }
-            val currPrice = currDay?.price
-                    ?: ""*/
-            /*if (currDay != null && currDay.date.date != 1) {
-                val prevPrice = d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.firstOrNull { it.date.date == currDay.date.date - 1 && it.date.month == currDay.date.month && it.date.year == currDay.date.year }?.price
-                        ?: ""
-                if (currPrice != "" && prevPrice != "" && currPrice != prevPrice) {
-                    changePrice = "Было: $prevPrice <br>Стало: $currPrice"
-                }
-
-            }*/
-
-            /* d.calendars.filter { it.date.after(cD) || (it.date.date == cD.date && it.date.month == cD.month && it.date.year == cD.year) }.forEach { tt ->
-                d.calendars.fold(mutableListOf<ParserAbstract.Day>()) { total, month -> total.add(month); total }.filter { it.date.after(cD) || it.date == cD }.firstOrNull { it.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() == tt.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().plusDays(1L) }?.let {
-                    if (it.price != tt.price) {
-                        listPrice.add("${ParserAnbNew.formatter.format(it.date)} было: ${tt.price} -- стало: ${it.price}<br><br>")
-                    }
-                }
-            }*/
             var lastNumPars = 0
             val stmtmp = con.prepareStatement("SELECT num_parsing FROM anb_url WHERE id = ?").apply {
                 setInt(1, d.Id)
@@ -94,17 +53,6 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 }
 
             }
-            /*for (lp in listPrice) {
-                val stmt0 = con.prepareStatement("SELECT id FROM price_changes WHERE id_url = ? AND price = ?").apply {
-                    setInt(1, d.Id)
-                    setString(2, lp)
-                }
-                val p0 = stmt0.executeQuery()
-                if (p0.next()) {
-                    continue
-                }
-                changePrice += lp
-            }*/
             for (lp in listPrice) {
                 con.prepareStatement("INSERT INTO price_changes(id_url, price, date_cal, date_parsing, num_parsing, price_was) VALUES (?, ?, ?, ?, ?, ?)").apply {
                     setInt(1, d.Id)
@@ -163,11 +111,6 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     close()
                 }
             }
-            /*val p7 = con.prepareStatement("UPDATE anb_url SET change_price = ? WHERE id = ?")
-            p7.setString(1, changePrice)
-            p7.setInt(2, d.Id)
-            p7.executeUpdate()
-            p7.close()*/
             con.prepareStatement("DELETE FROM checkup WHERE iid_anb = ?").apply {
                 setInt(1, d.Id)
                 executeUpdate()

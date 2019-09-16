@@ -11,8 +11,9 @@ import java.util.*
 
 
 abstract class ParserAbstract {
-    data class RoomAnb(val Id: Int, val Url: String, var calendars: List<Day>, var price: Price, var owner: String, var appName: String)
+    data class RoomAnb(val Id: Int, val Url: String, var calendars: List<Day>, var price: Price, var owner: String, var appName: String, var cl: CleanDisc)
     data class Price(val checkIn: String, val checkOut: String, val priceUsd: String, val checkInFirst15: String, val checkOutFirst15: String, val priceUsdFirst15: String, val checkInSecond15: String, val checkOutSecond15: String, val priceUsdSecond15: String, val checkIn30: String, val checkOut30: String, val priceUsd30: String)
+    data class CleanDisc(val discounts: List<String>, val cleaning: Int)
 
     fun parse(fn: () -> Unit) {
         logger("Start parsing")
@@ -37,7 +38,7 @@ abstract class ParserAbstract {
             while (res.next()) {
                 val id = res.getInt(1)
                 val url = res.getString(2)
-                arr.add(RoomAnb(id, url, listOf(), Price("", "", "", "", "", "", "", "", "", "", "", ""), "", ""))
+                arr.add(RoomAnb(id, url, listOf(), Price("", "", "", "", "", "", "", "", "", "", "", ""), "", "", CleanDisc(mutableListOf(), 0)))
             }
         })
         return arr
@@ -109,12 +110,18 @@ abstract class ParserAbstract {
     }
 
     class PriceItem {
+
+        var type: String? = null
         var total: Total? = null
+
+        @SerializedName("localized_title")
+        var localizedTitle: String? = null
     }
 
     class Total {
         @SerializedName("amount_formatted")
         var amountFormatted: String? = null
+        var amount: Int? = null
     }
 
     class ListingAnb {

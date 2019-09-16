@@ -56,23 +56,16 @@ class ParserAnbNew : IParser, ParserAbstract() {
                     ?: throw Exception("it.date?.getDateFromString(formatter) is null $calUrl"), it.available
                     ?: throw Exception("it.available is null $calUrl"), it.minNights
                     ?: throw Exception("it.minNights is null $calUrl"), it.availableForCheckin, it.bookable, (it.price
-                    ?: throw Exception("it.price is null $calUrl")).localPriceFormatted
+                    ?: throw Exception("it.price is null $calUrl")).localPriceFormatted?.replace("\$", "")?.trim()
                     ?: throw Exception("it.price.localPriceFormatted is null $calUrl"))
         }?.sortedBy { it.date }
                 ?: throw Exception("needMonth is empty, url - $calUrl")
         val firstAv = needMonth.firstOrNull { it.available && it.availableForCheckin ?: false && it.bookable ?: false }
         val price = firstAv?.run { getPrice(firstAv, roomId) }
-                ?: Price("недоступно для заказа", "недоступно для заказа", "недоступно для заказа", "недоступно для заказа", "недоступно для заказа", "недоступно для заказа", "недоступно для заказа", "недоступно для заказа", "недоступно для заказа", "недоступно для заказа", "недоступно для заказа", "недоступно для заказа")
+                ?: Price("not bookable", "not bookable", "not bookable", "not bookable", "not bookable", "not bookable", "not bookable", "not bookable", "not bookable", "not bookable", "not bookable", "not bookable")
         var owner = ""
         var apartName = ""
         if (!existNameAndOwner(room.Id)) {
-            /*val pagetext = downloadFromUrl(room.Url)
-            if (pagetext == "") {
-                logger("pagetext is empty ${room.Url}")
-            } else {
-                apartName = pagetext.getDataFromRegexp("""<title>(.+)</title>""")
-                owner = pagetext.getDataFromRegexp(""""host_name":"(.+?)"""")
-            }*/
             val urlListing = "https://www.airbnb.com/api/v1/listings/$roomId?key=d306zoyjsyarp7ifhu67rjxn52tv0t20"
             val jsonListing = downloadFromUrl(urlListing)
             if (jsonListing == "") {
@@ -83,11 +76,46 @@ class ParserAnbNew : IParser, ParserAbstract() {
             owner = listing?.listing?.user?.user?.firstName ?: ""
             apartName = listing?.listing?.name ?: ""
         }
+        val cdisc = getCleaningAndDiscount(roomId)
         room.price = price
         room.owner = owner
         room.appName = apartName
         room.calendars = needMonth
+        room.cl = cdisc
         ParserDocument(AnbDocument(room))
+    }
+
+    private fun getCleaningAndDiscount(roomId: String): CleanDisc {
+        val priceDiscount7 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dateNow.format(customFormatter)}&check_out=${dateNow.plusDays(7).format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=en&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+        val jsonPrice7 = downloadFromUrl(priceDiscount7)
+        if (jsonPrice7 == "") {
+            logger("jsonPrice7 is empty $priceDiscount7")
+            throw Exception("jsonPrice7 is empty")
+        }
+        val priceDiscount28 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dateNow.format(customFormatter)}&check_out=${dateNow.plusDays(28).format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=en&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+        val jsonPrice28 = downloadFromUrl(priceDiscount28)
+        if (jsonPrice28 == "") {
+            logger("jsonPrice28 is empty $priceDiscount28")
+            throw Exception("jsonPrice28 is empty")
+        }
+        val gson7 = Gson()
+        val price7 = gson7.fromJson(jsonPrice7, PdpListingBookingDetails::class.java)
+        val gson28 = Gson()
+        val price28 = gson28.fromJson(jsonPrice28, PdpListingBookingDetails::class.java)
+        val cleaningAm = price7.pdpListingBookingDetails?.firstOrNull()?.price?.priceItems?.firstOrNull { it.type == "CLEANING_FEE" }?.total?.amount
+                ?: 0
+        val listDiscount = mutableListOf<String>()
+        price7.pdpListingBookingDetails?.firstOrNull()?.price?.priceItems?.filter { it.type == "DISCOUNT" }?.forEach {
+            if (it.localizedTitle != null && it.localizedTitle != "") {
+                listDiscount.add(it.localizedTitle!!)
+            }
+        }
+        price28.pdpListingBookingDetails?.firstOrNull()?.price?.priceItems?.filter { it.type == "DISCOUNT" }?.forEach {
+            if (it.localizedTitle != null && it.localizedTitle != "") {
+                listDiscount.add(it.localizedTitle!!)
+            }
+        }
+        return CleanDisc(listDiscount, cleaningAm)
     }
 
     private fun getPrice(d: Day, roomId: String): Price {
