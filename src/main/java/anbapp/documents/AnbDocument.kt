@@ -7,6 +7,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.util.*
 
 class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument() {
@@ -195,6 +196,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     close()
                 }
             }
+            analitic(con, 6L)
             val pend = con.prepareStatement("UPDATE anb_url SET num_parsing = num_parsing+1 WHERE id = ?")
             pend.setInt(1, d.Id)
             pend.executeUpdate()
@@ -202,6 +204,60 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
         })
     }
 
+    private fun analitic(con: Connection, interval: Long) {
+        con.prepareStatement("DELETE FROM analitic WHERE id_url = ? AND perid_nights = 6").apply {
+            setInt(1, d.Id)
+            executeUpdate()
+            close()
+        }
+        var dateNextDay = LocalDate.MIN
+        var dateLastDay = LocalDate.MIN
+        val stmt0 = con.prepareStatement("SELECT MAX(d.date), (SELECT DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ?").apply {
+            setInt(1, d.Id)
+        }
+        val p0 = stmt0.executeQuery()
+        if (p0.next()) {
+            dateLastDay = p0.getTimestamp(1)?.toLocalDateTime()?.toLocalDate() ?: LocalDate.MIN
+            dateNextDay = p0.getTimestamp(2).toLocalDateTime().toLocalDate()
+        }
+        p0.close()
+        stmt0.close()
+        if (dateLastDay == LocalDate.MIN || dateNextDay == LocalDate.MIN) {
+            return
+        }
+        while (true) {
+            val datePlus = dateNextDay.plusDays(interval)
+            if (datePlus.isAfter(dateLastDay)) {
+                break
+            }
+            val stmt2 = con.prepareStatement("SELECT SUM(d.price_day) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND (d.date BETWEEN ? AND ?) AND  1 = ALL(SELECT d_inner.available FROM anb_url a_inner LEFT JOIN  checkup c_inner on a_inner.id = c_inner.iid_anb LEFT JOIN days d_inner on c_inner.id = d_inner.id_checkup WHERE d_inner.id = d.id)").apply {
+                setInt(1, d.Id)
+                setTimestamp(2, Timestamp.valueOf(dateNextDay.atStartOfDay()))
+                setTimestamp(3, Timestamp.valueOf(datePlus.atStartOfDay()))
+            }
+            var price = 0
+            val p1 = stmt2.executeQuery()
+            if (p1.next()) {
+                price = p1.getInt(1) ?: 0
+            }
+            p1.close()
+            stmt2.close()
+            if (price != 0) {
+                con.prepareStatement("INSERT INTO analitic SET id_url = ?, start_date = ?, end_date = ?, perid_nights = ?, price = ?").apply {
+                    setInt(1, d.Id)
+                    setTimestamp(2, Timestamp.valueOf(dateNextDay.atStartOfDay()))
+                    setTimestamp(3, Timestamp.valueOf(datePlus.atStartOfDay()))
+                    setInt(4, interval.toInt())
+                    setInt(5, price)
+                    executeUpdate()
+                    close()
+                }
+            }
+            dateNextDay = dateNextDay.plusDays(1L)
+        }
+    }
+
     data class PriceChange(val price: String, val priceWas: String, val dateCal: Date, val dateParsing: Date)
+
     data class BookingChange(val booking: Int, val dateCal: Date, val dateParsing: Date)
 }
