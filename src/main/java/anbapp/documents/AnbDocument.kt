@@ -242,12 +242,12 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 price = p1.getInt(1) ?: 0
                 avail = p1.getInt(2) ?: 0
             }
+            p1.close()
+            stmt2.close()
             if (avail != 7) {
                 dateNextDay = dateNextDay.plusDays(1L)
                 continue
             }
-            p1.close()
-            stmt2.close()
             if (price != 0) {
                 con.prepareStatement("INSERT INTO analitic SET id_url = ?, start_date = ?, end_date = ?, perid_nights = ?, price = ?").apply {
                     setInt(1, d.Id)
