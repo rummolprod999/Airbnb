@@ -230,15 +230,21 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             if (datePlus.isAfter(dateLastDay)) {
                 break
             }
-            val stmt2 = con.prepareStatement("SELECT SUM(d.price_day) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND (d.date BETWEEN ? AND ?) AND  1 = ALL(SELECT d_inner.available FROM anb_url a_inner LEFT JOIN  checkup c_inner on a_inner.id = c_inner.iid_anb LEFT JOIN days d_inner on c_inner.id = d_inner.id_checkup WHERE d_inner.id = d.id)").apply {
+            val stmt2 = con.prepareStatement("SELECT SUM(d.price_day), SUM(d.available) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND (d.date BETWEEN ? AND ?)").apply {
                 setInt(1, d.Id)
                 setTimestamp(2, Timestamp.valueOf(dateNextDay.atStartOfDay()))
                 setTimestamp(3, Timestamp.valueOf(datePlus.atStartOfDay()))
             }
             var price = 0
+            var avail = 0
             val p1 = stmt2.executeQuery()
             if (p1.next()) {
                 price = p1.getInt(1) ?: 0
+                avail = p1.getInt(2) ?: 0
+            }
+            if (avail != 7) {
+                dateNextDay = dateNextDay.plusDays(1L)
+                continue
             }
             p1.close()
             stmt2.close()
