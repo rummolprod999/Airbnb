@@ -196,7 +196,10 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     close()
                 }
             }
-            analitic(con, 6L)
+            if ((d.calendars.firstOrNull { it.date.after(cD) }?.minNights ?: 0) <= 7) {
+                analytics(con, 6L)
+            }
+
             val pend = con.prepareStatement("UPDATE anb_url SET num_parsing = num_parsing+1 WHERE id = ?")
             pend.setInt(1, d.Id)
             pend.executeUpdate()
@@ -204,9 +207,10 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
         })
     }
 
-    private fun analitic(con: Connection, interval: Long) {
-        con.prepareStatement("DELETE FROM analitic WHERE id_url = ? AND perid_nights = 6").apply {
+    private fun analytics(con: Connection, interval: Long) {
+        con.prepareStatement("DELETE FROM analitic WHERE id_url = ? AND perid_nights = ?").apply {
             setInt(1, d.Id)
+            setInt(2, interval.toInt())
             executeUpdate()
             close()
         }
@@ -244,7 +248,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             }
             p1.close()
             stmt2.close()
-            if (avail != 7) {
+            if (avail != (interval.toInt() + 1)) {
                 dateNextDay = dateNextDay.plusDays(1L)
                 continue
             }
@@ -254,7 +258,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     setTimestamp(2, Timestamp.valueOf(dateNextDay.atStartOfDay()))
                     setTimestamp(3, Timestamp.valueOf(datePlus.atStartOfDay()))
                     setInt(4, interval.toInt())
-                    setInt(5, price)
+                    setInt(5, price + d.cl.cleaning)
                     executeUpdate()
                     close()
                 }
