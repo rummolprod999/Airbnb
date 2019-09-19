@@ -196,7 +196,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     close()
                 }
             }
-            if ((d.calendars.firstOrNull { it.date.after(cD) }?.minNights ?: 0) <= 7) {
+            if ((d.calendars.firstOrNull { it.date.after(cD) }?.minNights ?: 0) <= 6) {
                 analytics(con, 6L)
             }
 
@@ -234,7 +234,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             if (datePlus.isAfter(dateLastDay)) {
                 break
             }
-            val stmt2 = con.prepareStatement("SELECT SUM(d.price_day), SUM(d.available) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND (d.date BETWEEN ? AND ?)").apply {
+            val stmt2 = con.prepareStatement("SELECT SUM(d.available) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND (d.date BETWEEN ? AND ?)").apply {
                 setInt(1, d.Id)
                 setTimestamp(2, Timestamp.valueOf(dateNextDay.atStartOfDay()))
                 setTimestamp(3, Timestamp.valueOf(datePlus.atStartOfDay()))
@@ -243,8 +243,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             var avail = 0
             val p1 = stmt2.executeQuery()
             if (p1.next()) {
-                price = p1.getInt(1) ?: 0
-                avail = p1.getInt(2) ?: 0
+                avail = p1.getInt(1) ?: 0
             }
             p1.close()
             stmt2.close()
@@ -252,6 +251,17 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 dateNextDay = dateNextDay.plusDays(1L)
                 continue
             }
+            val stmt3 = con.prepareStatement("SELECT SUM(d.price_day) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND d.date >= ? AND d.date < ?").apply {
+                setInt(1, d.Id)
+                setTimestamp(2, Timestamp.valueOf(dateNextDay.atStartOfDay()))
+                setTimestamp(3, Timestamp.valueOf(datePlus.atStartOfDay()))
+            }
+            val p2 = stmt3.executeQuery()
+            if (p2.next()) {
+                price = p2.getInt(1) ?: 0
+            }
+            p2.close()
+            stmt3.close()
             if (price != 0) {
                 con.prepareStatement("INSERT INTO analitic SET id_url = ?, start_date = ?, end_date = ?, perid_nights = ?, price = ?").apply {
                     setInt(1, d.Id)
