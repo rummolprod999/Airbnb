@@ -205,10 +205,11 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 }
             }
 
-            val pend = con.prepareStatement("UPDATE anb_url SET num_parsing = num_parsing+1 WHERE id = ?")
-            pend.setInt(1, d.Id)
-            pend.executeUpdate()
-            pend.close()
+            con.prepareStatement("UPDATE anb_url SET num_parsing = num_parsing+1 WHERE id = ?").apply {
+                setInt(1, d.Id)
+                executeUpdate()
+                close()
+            }
         })
     }
 
