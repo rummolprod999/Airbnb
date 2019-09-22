@@ -196,13 +196,14 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     close()
                 }
             }
-            if ((d.calendars.firstOrNull { it.date.after(cD) }?.minNights ?: 0) <= 6) {
+            /*if ((d.calendars.firstOrNull { it.date.after(cD) }?.minNights ?: 0) <= 6) {
                 analytics(con, 6L)
-            }
-            (7..31).forEach {
-                if ((d.calendars.firstOrNull { x -> x.date.after(cD) }?.minNights ?: 0) == it) {
+            }*/
+            (6..30).forEach {
+                /*if ((d.calendars.firstOrNull { x -> x.date.after(cD) }?.minNights ?: 0) <= it) {
                     analytics(con, it.toLong())
-                }
+                }*/
+                analytics(con, it.toLong())
             }
 
             con.prepareStatement("UPDATE anb_url SET num_parsing = num_parsing+1 WHERE id = ?").apply {
