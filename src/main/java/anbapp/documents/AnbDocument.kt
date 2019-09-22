@@ -200,10 +200,9 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 analytics(con, 6L)
             }*/
             (6..30).forEach {
-                /*if ((d.calendars.firstOrNull { x -> x.date.after(cD) }?.minNights ?: 0) <= it) {
+                if ((d.calendars.firstOrNull { x -> x.date.after(cD) }?.minNights ?: 0) <= it) {
                     analytics(con, it.toLong())
-                }*/
-                analytics(con, it.toLong())
+                }
             }
 
             con.prepareStatement("UPDATE anb_url SET num_parsing = num_parsing+1 WHERE id = ?").apply {
