@@ -282,8 +282,4 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             dateNextDay = dateNextDay.plusDays(1L)
         }
     }
-
-    data class PriceChange(val price: String, val priceWas: String, val dateCal: Date, val dateParsing: Date)
-
-    data class BookingChange(val booking: Int, val dateCal: Date, val dateParsing: Date)
 }

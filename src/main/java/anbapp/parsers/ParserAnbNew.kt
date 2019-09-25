@@ -22,6 +22,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
 
     override fun parser() = parse {
         parserAnb()
+        checkIfNotFirst()
     }
 
     private fun parserAnb() {
@@ -33,6 +34,10 @@ class ParserAnbNew : IParser, ParserAbstract() {
                 logger("Error in getCalendar function", e.stackTrace, e, it.Url)
             }
         }
+    }
+
+    private fun checkIfNotFirst() {
+        
     }
 
     private fun getCalendar(room: RoomAnb) {
