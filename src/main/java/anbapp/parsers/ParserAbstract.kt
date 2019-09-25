@@ -7,6 +7,7 @@ import anbapp.logger.logger
 import com.google.gson.annotations.SerializedName
 import java.sql.Connection
 import java.sql.DriverManager
+import java.time.LocalDate
 import java.util.*
 
 
@@ -60,6 +61,10 @@ abstract class ParserAbstract {
     data class RoomAnb(val Id: Int, val Url: String, var calendars: List<Day>, var price: Price, var owner: String, var appName: String, var cl: CleanDisc)
     data class Price(val checkIn: String, val checkOut: String, val priceUsd: String, val checkInFirst15: String, val checkOutFirst15: String, val priceUsdFirst15: String, val checkInSecond15: String, val checkOutSecond15: String, val priceUsdSecond15: String, val checkIn30: String, val checkOut30: String, val priceUsd30: String)
     data class CleanDisc(val discounts: List<String>, val cleaning: Int)
+    data class Analitycs(val startDate: LocalDate, val endDate: LocalDate, var prices: MutableList<AnalitycsPrice>)
+    data class AnalitycsPrice(val price: Int, val idUrl: Int, val own: Int)
+    data class AnalitycsInterval(val startDate: LocalDate, val endDate: LocalDate, var days: List<Int>)
+    data class CountInterval(val day: Int)
     class DayAnb {
         var date: String? = null
         var available: Boolean? = null

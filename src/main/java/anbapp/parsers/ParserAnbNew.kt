@@ -1,11 +1,16 @@
 package anbapp.parsers
 
+import anbapp.builderApp.BuilderApp
 import anbapp.documents.AnbDocument
 import anbapp.exstensions.getDataFromRegexp
 import anbapp.exstensions.getDateFromString
 import anbapp.httpTools.downloadFromUrl
 import anbapp.logger.logger
 import com.google.gson.Gson
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.Statement
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
@@ -21,7 +26,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
     }
 
     override fun parser() = parse {
-        parserAnb()
+        //parserAnb()
         checkIfNotFirst()
     }
 
@@ -37,7 +42,70 @@ class ParserAnbNew : IParser, ParserAbstract() {
     }
 
     private fun checkIfNotFirst() {
-        
+        DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
+            con.prepareStatement("DELETE FROM date_not_first WHERE 1").apply {
+                executeUpdate()
+                close()
+            }
+            con.prepareStatement("DELETE FROM date_not_first_count WHERE 1").apply {
+                executeUpdate()
+                close()
+            }
+            var analitycsList = mutableListOf<Analitycs>()
+            (6..30).forEach {
+                val stmt0 = con.prepareStatement("SELECT a.start_date, a.end_date FROM analitic a WHERE a.perid_nights = ? GROUP BY a.start_date, a.end_date ORDER BY a.start_date").apply {
+                    setInt(1, it)
+                }
+                val p0 = stmt0.executeQuery()
+                while (p0.next()) {
+                    val stDt = p0.getTimestamp(1).toLocalDateTime().toLocalDate()
+                    val ndDt = p0.getTimestamp(2).toLocalDateTime().toLocalDate()
+                    val stmt1 = con.prepareStatement("SELECT a.price, au.id, au.own  FROM analitic a JOIN anb_url au on a.id_url = au.id WHERE a.start_date = ? AND a.end_date = ? ORDER BY  a.price").apply {
+                        setTimestamp(1, Timestamp.valueOf(stDt.atStartOfDay()))
+                        setTimestamp(2, Timestamp.valueOf(ndDt.atStartOfDay()))
+                    }
+                    val analitycs = Analitycs(stDt, ndDt, mutableListOf())
+                    val p1 = stmt1.executeQuery()
+                    while (p1.next()) {
+                        val price = p1.getInt(1)
+                        val idUrl = p1.getInt(2)
+                        val own = p1.getInt(3)
+                        analitycs.prices.add(AnalitycsPrice(price, idUrl, own))
+                    }
+                    p1.close()
+                    stmt1.close()
+                    analitycsList.add(analitycs)
+                }
+                p0.close()
+                stmt0.close()
+            }
+            analitycsList = analitycsList.map { t -> Analitycs(t.startDate, t.endDate, t.prices.sortedBy { x -> x.price }.toMutableList()) }.filter { m -> m.prices.first().own == 0 }.toMutableList()
+            fun r(s: LocalDate, n: LocalDate) = (s.dayOfMonth..n.dayOfMonth).toList()
+            val inter = analitycsList.map { x -> AnalitycsInterval(x.startDate, x.endDate, r(x.startDate, x.endDate)) }
+            inter.forEach { t ->
+                val stmt1 = con.prepareStatement("INSERT INTO date_not_first SET start_date = ?, end_date = ?", Statement.RETURN_GENERATED_KEYS).apply {
+                    setTimestamp(1, Timestamp.valueOf(t.startDate.atStartOfDay()))
+                    setTimestamp(2, Timestamp.valueOf(t.endDate.atStartOfDay()))
+                    executeUpdate()
+                }
+                var idFs = 0
+                val rsoi = stmt1.generatedKeys
+                if (rsoi.next()) {
+                    idFs = rsoi.getInt(1)
+                }
+                stmt1.close()
+                rsoi.close()
+                t.days.forEach { m ->
+                    con.prepareStatement("INSERT INTO date_not_first_days SET id_date_not_first = ?, day = ?").apply {
+                        setInt(1, idFs)
+                        setInt(2, m)
+                        executeUpdate()
+                        close()
+                    }
+                }
+            }
+            //println(inter)
+        })
     }
 
     private fun getCalendar(room: RoomAnb) {
