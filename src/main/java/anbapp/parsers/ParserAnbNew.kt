@@ -26,7 +26,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
     }
 
     override fun parser() = parse {
-        //parserAnb()
+        parserAnb()
         checkIfNotFirst()
     }
 
@@ -43,11 +43,15 @@ class ParserAnbNew : IParser, ParserAbstract() {
 
     private fun checkIfNotFirst() {
         DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
-            con.prepareStatement("DELETE FROM date_not_first WHERE 1").apply {
+            con.prepareStatement("TRUNCATE TABLE date_not_first").apply {
                 executeUpdate()
                 close()
             }
-            con.prepareStatement("DELETE FROM date_not_first_count WHERE 1").apply {
+            con.prepareStatement("TRUNCATE TABLE date_not_first_count").apply {
+                executeUpdate()
+                close()
+            }
+            con.prepareStatement("TRUNCATE TABLE intervals_count").apply {
                 executeUpdate()
                 close()
             }
@@ -81,30 +85,55 @@ class ParserAnbNew : IParser, ParserAbstract() {
             }
             analitycsList = analitycsList.map { t -> Analitycs(t.startDate, t.endDate, t.prices.sortedBy { x -> x.price }.toMutableList()) }.filter { m -> m.prices.first().own == 0 }.toMutableList()
             fun r(s: LocalDate, n: LocalDate) = (s.dayOfMonth..n.dayOfMonth).toList()
-            val inter = analitycsList.map { x -> AnalitycsInterval(x.startDate, x.endDate, r(x.startDate, x.endDate)) }
+            fun ss(s: LocalDate, n: LocalDate): List<Int> {
+                var ss = s
+                val c = mutableListOf<Int>()
+                c.add(ss.dayOfMonth)
+                while (ss.isBefore(n)) {
+                    ss = ss.plusDays(1)
+                    c.add(ss.dayOfMonth)
+                }
+                return c
+            }
+
+            val inter = analitycsList.map { x -> AnalitycsInterval(x.startDate, x.endDate, ss(x.startDate, x.endDate)) }
             inter.forEach { t ->
-                val stmt1 = con.prepareStatement("INSERT INTO date_not_first SET start_date = ?, end_date = ?", Statement.RETURN_GENERATED_KEYS).apply {
+                con.prepareStatement("INSERT INTO date_not_first SET start_date = ?, end_date = ?, days = ?", Statement.RETURN_GENERATED_KEYS).apply {
                     setTimestamp(1, Timestamp.valueOf(t.startDate.atStartOfDay()))
                     setTimestamp(2, Timestamp.valueOf(t.endDate.atStartOfDay()))
+                    setString(3, t.days.fold("") { total, next -> "$total ${next}," })
                     executeUpdate()
                 }
-                var idFs = 0
-                val rsoi = stmt1.generatedKeys
-                if (rsoi.next()) {
-                    idFs = rsoi.getInt(1)
+            }
+            val cIntervals = mutableListOf<CountInterval>()
+            (1..31).forEach { x ->
+                val anInt = inter.filter { v -> v.days.contains(x) }
+                cIntervals.add(CountInterval(x, anInt.count(), anInt))
+            }
+            cIntervals.sortByDescending { v -> v.count }
+            cIntervals.forEach { w ->
+                val stmt3 = con.prepareStatement("INSERT INTO date_not_first_count SET day_month = ?, count = ?", Statement.RETURN_GENERATED_KEYS).apply {
+                    setInt(1, w.day)
+                    setInt(2, w.count)
+                    executeUpdate()
                 }
-                stmt1.close()
+                var idInt = 0
+                val rsoi = stmt3.generatedKeys
+                if (rsoi.next()) {
+                    idInt = rsoi.getInt(1)
+                }
+                stmt3.close()
                 rsoi.close()
-                t.days.forEach { m ->
-                    con.prepareStatement("INSERT INTO date_not_first_days SET id_date_not_first = ?, day = ?").apply {
-                        setInt(1, idFs)
-                        setInt(2, m)
+                w.intervals.forEach { n ->
+                    con.prepareStatement("INSERT INTO intervals_count SET date_start = ?, date_end = ?, id_count = ?").apply {
+                        setTimestamp(1, Timestamp.valueOf(n.startDate.atStartOfDay()))
+                        setTimestamp(2, Timestamp.valueOf(n.endDate.atStartOfDay()))
+                        setInt(3, idInt)
                         executeUpdate()
                         close()
                     }
                 }
             }
-            //println(inter)
         })
     }
 

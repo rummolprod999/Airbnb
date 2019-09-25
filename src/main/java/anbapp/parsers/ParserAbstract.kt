@@ -64,7 +64,7 @@ abstract class ParserAbstract {
     data class Analitycs(val startDate: LocalDate, val endDate: LocalDate, var prices: MutableList<AnalitycsPrice>)
     data class AnalitycsPrice(val price: Int, val idUrl: Int, val own: Int)
     data class AnalitycsInterval(val startDate: LocalDate, val endDate: LocalDate, var days: List<Int>)
-    data class CountInterval(val day: Int)
+    data class CountInterval(val day: Int, val count: Int, val intervals: List<AnalitycsInterval>)
     class DayAnb {
         var date: String? = null
         var available: Boolean? = null
