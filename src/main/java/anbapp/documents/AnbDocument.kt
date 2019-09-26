@@ -214,12 +214,6 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
     }
 
     private fun analytics(con: Connection, interval: Long) {
-        con.prepareStatement("DELETE FROM analitic WHERE id_url = ? AND perid_nights = ?").apply {
-            setInt(1, d.Id)
-            setInt(2, interval.toInt())
-            executeUpdate()
-            close()
-        }
         var dateNextDay = LocalDate.MIN
         var dateLastDay = LocalDate.MIN
         val stmt0 = con.prepareStatement("SELECT MAX(d.date), (SELECT DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ?").apply {

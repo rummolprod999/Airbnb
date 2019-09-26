@@ -26,6 +26,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
     }
 
     override fun parser() = parse {
+        clearanalitic()
         parserAnb()
         checkIfNotFirst()
     }
@@ -39,6 +40,15 @@ class ParserAnbNew : IParser, ParserAbstract() {
                 logger("Error in getCalendar function", e.stackTrace, e, it.Url)
             }
         }
+    }
+
+    private fun clearanalitic() {
+        DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
+            con.prepareStatement("DELETE FROM analitic WHERE 1").apply {
+                executeUpdate()
+                close()
+            }
+        })
     }
 
     private fun checkIfNotFirst() {
