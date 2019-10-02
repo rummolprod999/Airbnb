@@ -44,7 +44,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
 
     private fun clearanalitic() {
         DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
-            con.prepareStatement("DELETE FROM analitic WHERE 1").apply {
+            con.prepareStatement("TRUNCATE TABLE analitic").apply {
                 executeUpdate()
                 close()
             }

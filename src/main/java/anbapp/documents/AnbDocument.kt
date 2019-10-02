@@ -8,6 +8,7 @@ import java.sql.DriverManager
 import java.sql.Statement
 import java.sql.Timestamp
 import java.time.LocalDate
+import java.time.ZoneId
 import java.util.*
 
 class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDocument() {
@@ -200,9 +201,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 analytics(con, 6L)
             }*/
             (6..30).forEach {
-                if ((d.calendars.firstOrNull { x -> x.date.after(cD) }?.minNights ?: 0) <= it) {
-                    analytics(con, it.toLong())
-                }
+                analytics(con, it.toLong())
             }
 
             con.prepareStatement("UPDATE anb_url SET num_parsing = num_parsing+1 WHERE id = ?").apply {
@@ -233,6 +232,12 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             val datePlus = dateNextDay.plusDays(interval)
             if (datePlus.isAfter(dateLastDay)) {
                 break
+            }
+            val minNights = d.calendars.find { d -> d.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().isEqual(dateNextDay) }?.minNights
+                    ?: throw Exception("minNights not found - ${d.Url}")
+            if (minNights > interval) {
+                dateNextDay = dateNextDay.plusDays(1L)
+                continue
             }
             val stmt2 = con.prepareStatement("SELECT SUM(d.available) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ? AND (d.date BETWEEN ? AND ?)").apply {
                 setInt(1, d.Id)
