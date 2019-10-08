@@ -1,6 +1,8 @@
 package anbapp.documents
 
 import anbapp.builderApp.BuilderApp
+import anbapp.exstensions.getDataFromRegexp
+import anbapp.logger.logger
 import anbapp.parsers.ParserAbstract
 import anbapp.parsers.ParserAnbNew
 import java.sql.Connection
@@ -200,8 +202,9 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             /*if ((d.calendars.firstOrNull { it.date.after(cD) }?.minNights ?: 0) <= 6) {
                 analytics(con, 6L)
             }*/
+            val (monthDisc, weekDisc) = findDiscounts()
             (6..30).forEach {
-                analytics(con, it.toLong())
+                analytics(con, it.toLong(), monthDisc, weekDisc)
             }
 
             con.prepareStatement("UPDATE anb_url SET num_parsing = num_parsing+1 WHERE id = ?").apply {
@@ -212,7 +215,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
         })
     }
 
-    private fun analytics(con: Connection, interval: Long) {
+    private fun analytics(con: Connection, interval: Long, monthDisc: Int, weekDisc: Int) {
         var dateNextDay = LocalDate.MIN
         var dateLastDay = LocalDate.MIN
         val stmt0 = con.prepareStatement("SELECT MAX(d.date), (SELECT DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)) FROM anb_url an LEFT JOIN  checkup c on an.id = c.iid_anb LEFT JOIN days d on c.id = d.id_checkup WHERE an.id = ?").apply {
@@ -267,6 +270,13 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             }
             p2.close()
             stmt3.close()
+            var nPice = price.toFloat()
+            if (interval in 6..27 && weekDisc != 0) {
+                nPice *= ((100 - weekDisc).toFloat() / 100)
+            } else if (interval > 27 && monthDisc != 0) {
+                nPice *= ((100 - monthDisc).toFloat() / 100)
+            }
+            price = nPice.toInt()
             if (price != 0) {
                 con.prepareStatement("INSERT INTO analitic SET id_url = ?, start_date = ?, end_date = ?, perid_nights = ?, price = ?").apply {
                     setInt(1, d.Id)
@@ -280,5 +290,30 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             }
             dateNextDay = dateNextDay.plusDays(1L)
         }
+    }
+
+    private fun findDiscounts(): Discounts {
+        var month = 0
+        var week = 0
+        d.cl.discounts.forEach {
+            try {
+                val mText = it.getDataFromRegexp("(\\d{1,2})% monthly")
+                if (mText != "") {
+                    month = Integer.parseInt(mText)
+                }
+            } catch (e: Exception) {
+                logger(e, e.stackTrace)
+            }
+            try {
+                val mText = it.getDataFromRegexp("(\\d{1,2})% weekly")
+                if (mText != "") {
+                    week = Integer.parseInt(mText)
+                }
+            } catch (e: Exception) {
+                logger(e, e.stackTrace)
+            }
+        }
+        return Discounts(month, week)
+
     }
 }
