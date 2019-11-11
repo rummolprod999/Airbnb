@@ -278,12 +278,13 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             }
             price = nPice.toInt()
             if (price != 0) {
-                con.prepareStatement("INSERT INTO analitic SET id_url = ?, start_date = ?, end_date = ?, perid_nights = ?, price = ?").apply {
+                con.prepareStatement("INSERT INTO analitic SET id_url = ?, start_date = ?, end_date = ?, perid_nights = ?, price = ?, id_user = ?").apply {
                     setInt(1, d.Id)
                     setTimestamp(2, Timestamp.valueOf(dateNextDay.atStartOfDay()))
                     setTimestamp(3, Timestamp.valueOf(datePlus.atStartOfDay()))
                     setInt(4, interval.toInt())
                     setInt(5, price + d.cl.cleaning)
+                    setInt(6, BuilderApp.UserId)
                     executeUpdate()
                     close()
                 }

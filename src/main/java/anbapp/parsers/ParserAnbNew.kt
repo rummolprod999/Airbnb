@@ -44,7 +44,8 @@ class ParserAnbNew : IParser, ParserAbstract() {
 
     private fun clearanalitic() {
         DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
-            con.prepareStatement("TRUNCATE TABLE analitic").apply {
+            con.prepareStatement("DELETE FROM analitic WHERE id_user = ?").apply {
+                setInt(1, BuilderApp.UserId)
                 executeUpdate()
                 close()
             }
@@ -53,30 +54,35 @@ class ParserAnbNew : IParser, ParserAbstract() {
 
     private fun checkIfNotFirst() {
         DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
-            con.prepareStatement("TRUNCATE TABLE date_not_first").apply {
+            con.prepareStatement("DELETE FROM date_not_first WHERE id_user = ?").apply {
+                setInt(1, BuilderApp.UserId)
                 executeUpdate()
                 close()
             }
-            con.prepareStatement("TRUNCATE TABLE date_not_first_count").apply {
+            con.prepareStatement("DELETE FROM date_not_first_count WHERE id_user = ?").apply {
+                setInt(1, BuilderApp.UserId)
                 executeUpdate()
                 close()
             }
-            con.prepareStatement("TRUNCATE TABLE intervals_count").apply {
+            con.prepareStatement("DELETE FROM intervals_count WHERE id_user = ?").apply {
+                setInt(1, BuilderApp.UserId)
                 executeUpdate()
                 close()
             }
             var analitycsList = mutableListOf<Analitycs>()
             (6..30).forEach {
-                val stmt0 = con.prepareStatement("SELECT a.start_date, a.end_date FROM analitic a WHERE a.perid_nights = ? GROUP BY a.start_date, a.end_date ORDER BY a.start_date").apply {
+                val stmt0 = con.prepareStatement("SELECT a.start_date, a.end_date FROM analitic a WHERE a.perid_nights = ? AND a.id_user = ? GROUP BY a.start_date, a.end_date ORDER BY a.start_date").apply {
                     setInt(1, it)
+                    setInt(2, BuilderApp.UserId)
                 }
                 val p0 = stmt0.executeQuery()
                 while (p0.next()) {
                     val stDt = p0.getTimestamp(1).toLocalDateTime().toLocalDate()
                     val ndDt = p0.getTimestamp(2).toLocalDateTime().toLocalDate()
-                    val stmt1 = con.prepareStatement("SELECT a.price, au.id, au.own  FROM analitic a JOIN anb_url au on a.id_url = au.id WHERE a.start_date = ? AND a.end_date = ? ORDER BY  a.price").apply {
+                    val stmt1 = con.prepareStatement("SELECT a.price, au.id, au.own  FROM analitic a JOIN anb_url au on a.id_url = au.id WHERE a.start_date = ? AND a.end_date = ? AND a.id_user = ? ORDER BY  a.price").apply {
                         setTimestamp(1, Timestamp.valueOf(stDt.atStartOfDay()))
                         setTimestamp(2, Timestamp.valueOf(ndDt.atStartOfDay()))
+                        setInt(3, BuilderApp.UserId)
                     }
                     val analitycs = Analitycs(stDt, ndDt, mutableListOf())
                     val p1 = stmt1.executeQuery()
@@ -108,10 +114,11 @@ class ParserAnbNew : IParser, ParserAbstract() {
 
             val inter = analitycsList.map { x -> AnalitycsInterval(x.startDate, x.endDate, ss(x.startDate, x.endDate)) }
             inter.forEach { t ->
-                con.prepareStatement("INSERT INTO date_not_first SET start_date = ?, end_date = ?, days = ?", Statement.RETURN_GENERATED_KEYS).apply {
+                con.prepareStatement("INSERT INTO date_not_first SET start_date = ?, end_date = ?, days = ?, id_user = ?", Statement.RETURN_GENERATED_KEYS).apply {
                     setTimestamp(1, Timestamp.valueOf(t.startDate.atStartOfDay()))
                     setTimestamp(2, Timestamp.valueOf(t.endDate.atStartOfDay()))
                     setString(3, t.days.fold("") { total, next -> "$total ${next}," })
+                    setInt(4, BuilderApp.UserId)
                     executeUpdate()
                 }
             }
@@ -122,9 +129,10 @@ class ParserAnbNew : IParser, ParserAbstract() {
             }
             cIntervals.sortByDescending { v -> v.count }
             cIntervals.forEach { w ->
-                val stmt3 = con.prepareStatement("INSERT INTO date_not_first_count SET day_month = ?, count = ?", Statement.RETURN_GENERATED_KEYS).apply {
+                val stmt3 = con.prepareStatement("INSERT INTO date_not_first_count SET day_month = ?, count_m = ?, id_user = ?", Statement.RETURN_GENERATED_KEYS).apply {
                     setInt(1, w.day)
                     setInt(2, w.count)
+                    setInt(3, BuilderApp.UserId)
                     executeUpdate()
                 }
                 var idInt = 0
@@ -135,10 +143,11 @@ class ParserAnbNew : IParser, ParserAbstract() {
                 stmt3.close()
                 rsoi.close()
                 w.intervals.forEach { n ->
-                    con.prepareStatement("INSERT INTO intervals_count SET date_start = ?, date_end = ?, id_count = ?").apply {
+                    con.prepareStatement("INSERT INTO intervals_count SET date_start = ?, date_end = ?, id_count = ?, id_user = ?").apply {
                         setTimestamp(1, Timestamp.valueOf(n.startDate.atStartOfDay()))
                         setTimestamp(2, Timestamp.valueOf(n.endDate.atStartOfDay()))
                         setInt(3, idInt)
+                        setInt(4, BuilderApp.UserId)
                         executeUpdate()
                         close()
                     }

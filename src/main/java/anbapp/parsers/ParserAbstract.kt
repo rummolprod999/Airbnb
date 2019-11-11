@@ -32,7 +32,10 @@ abstract class ParserAbstract {
         val arr = mutableListOf<RoomAnb>()
 
         DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
-            val res = con.prepareStatement("SELECT id, url FROM anb_url WHERE suspend = 0").executeQuery()
+            val stmt0 = con.prepareStatement("SELECT id, url FROM anb_url WHERE suspend = 0 AND id_user = ?").apply {
+                setInt(1, BuilderApp.UserId)
+            }
+            val res = stmt0.executeQuery()
             while (res.next()) {
                 val id = res.getInt(1)
                 val url = res.getString(2)
