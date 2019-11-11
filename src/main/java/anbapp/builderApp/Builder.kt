@@ -11,6 +11,7 @@ import kotlin.system.exitProcess
 
 object BuilderApp {
     lateinit var arg: Arguments
+    var UserId: Int = 0
     lateinit var Database: String
     lateinit var Prefix: String
     lateinit var UserDb: String
@@ -27,6 +28,7 @@ const val arguments = "anb"
 
 class Builder(args: Array<String>) {
     lateinit var arg: Arguments
+    var UserId: Int
     lateinit var Database: String
     lateinit var Prefix: String
     lateinit var UserDb: String
@@ -39,7 +41,7 @@ class Builder(args: Array<String>) {
     lateinit var LogFile: String
 
     init {
-        if (args.isEmpty()) {
+        if (args.size < 2) {
             println("Недостаточно агрументов для запуска, используйте $arguments для запуска")
             exitProcess(0)
         }
@@ -47,6 +49,7 @@ class Builder(args: Array<String>) {
             "anb" -> arg = Arguments.ANB
             else -> run { println("Неверно указаны аргументы, используйте $arguments, выходим из программы"); exitProcess(0) }
         }
+        UserId = Integer.parseInt(args[1])
         setSettings()
         createDirs()
         createObj()
@@ -63,8 +66,8 @@ class Builder(args: Array<String>) {
         PassDb = doc.passdb ?: throw IllegalArgumentException("bad passdb")
         Server = doc.server ?: throw IllegalArgumentException("bad server")
         Port = doc.port ?: 3306
-        TempPath = "$executePath${File.separator}tempdir_tenders_${arg.name.toLowerCase()}"
-        LogPath = "$executePath${File.separator}logdir_tenders_${arg.name.toLowerCase()}"
+        TempPath = "$executePath${File.separator}tempdir_${arg.name.toLowerCase()}_${UserId}"
+        LogPath = "$executePath${File.separator}logdir_${arg.name.toLowerCase()}_${UserId}"
     }
 
     private fun createDirs() {
@@ -96,6 +99,7 @@ class Builder(args: Array<String>) {
 
     private fun createObj() {
         BuilderApp.arg = arg
+        BuilderApp.UserId = UserId
         BuilderApp.Database = Database
         BuilderApp.PassDb = PassDb
         BuilderApp.UserDb = UserDb
