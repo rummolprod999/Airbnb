@@ -5,6 +5,8 @@ import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import java.io.File
 import java.io.FileReader
+import java.sql.Connection
+import java.sql.DriverManager
 import java.text.SimpleDateFormat
 import kotlin.system.exitProcess
 
@@ -22,6 +24,10 @@ object BuilderApp {
     lateinit var LogPath: String
     lateinit var LogFile: String
     lateinit var UrlConnect: String
+    lateinit var ProxyAddress: String
+    var ProxyPort: Int = 0
+    lateinit var ProxyUser: String
+    lateinit var ProxyPass: String
 }
 
 const val arguments = "anb"
@@ -39,6 +45,10 @@ class Builder(args: Array<String>) {
     lateinit var TempPath: String
     lateinit var LogPath: String
     lateinit var LogFile: String
+    var ProxyAddress: String = ""
+    var ProxyPort: Int = 0
+    var ProxyUser: String = ""
+    var ProxyPass: String = ""
 
     init {
         if (args.size < 2) {
@@ -53,6 +63,26 @@ class Builder(args: Array<String>) {
         setSettings()
         createDirs()
         createObj()
+        getProxySettings()
+    }
+
+    private fun getProxySettings() {
+        DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
+            val stmt0 = con.prepareStatement("SELECT proxy_address, proxy_port, proxy_user, proxy_pass FROM proxy WHERE id_user = ?").apply {
+                setInt(1, BuilderApp.UserId)
+            }
+            val res = stmt0.executeQuery()
+            if (res.next()) {
+                ProxyAddress = res.getString(1)
+                ProxyPort = res.getInt(2)
+                ProxyUser = res.getString(3)
+                ProxyPass = res.getString(4)
+            }
+        })
+        BuilderApp.ProxyAddress = ProxyAddress
+        BuilderApp.ProxyPass = ProxyPass
+        BuilderApp.ProxyUser = ProxyUser
+        BuilderApp.ProxyPort = ProxyPort
     }
 
     private fun setSettings() {

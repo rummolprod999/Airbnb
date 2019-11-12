@@ -1,15 +1,17 @@
 package anbapp.httpTools
 
+import anbapp.builderApp.BuilderApp
 import anbapp.logger.logger
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.lang.Thread.sleep
-import java.net.URL
+import java.net.*
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+
 
 private const val timeoutD = 3000L
 
@@ -58,7 +60,20 @@ fun downloadFromUrl(urls: String, i: Int = 10, wt: Long = 3000): String {
 fun downloadWaitWithRef(urls: String): String {
     val s = StringBuilder()
     val url = URL(urls)
-    val uc = url.openConnection()
+    val uc = if (BuilderApp.ProxyAddress != "" && BuilderApp.ProxyPort != 0 && BuilderApp.ProxyUser != "" && BuilderApp.ProxyPass != "") {
+        System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
+        val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress(BuilderApp.ProxyAddress, BuilderApp.ProxyPort))
+        val connection = URL(urls).openConnection(proxy) as HttpURLConnection
+        val authenticator = object : Authenticator() {
+            override fun getPasswordAuthentication(): PasswordAuthentication {
+                return PasswordAuthentication(BuilderApp.ProxyUser, BuilderApp.ProxyPass.toCharArray())
+            }
+        }
+        Authenticator.setDefault(authenticator)
+        connection
+    } else {
+        url.openConnection()
+    }
     uc.connectTimeout = 30_000
     uc.readTimeout = 30_000
     uc.addRequestProperty("User-Agent", RandomUserAgent.randomUserAgent)
