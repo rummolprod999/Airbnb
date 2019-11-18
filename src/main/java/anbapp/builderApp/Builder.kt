@@ -33,7 +33,7 @@ object BuilderApp {
 const val arguments = "anb"
 
 class Builder(args: Array<String>) {
-    lateinit var arg: Arguments
+    var arg: Arguments
     var UserId: Int
     lateinit var Database: String
     lateinit var Prefix: String
@@ -52,12 +52,12 @@ class Builder(args: Array<String>) {
 
     init {
         if (args.size < 2) {
-            println("Недостаточно агрументов для запуска, используйте $arguments для запуска")
+            println("Few arguments for running, use $arguments")
             exitProcess(0)
         }
         when (args[0]) {
             "anb" -> arg = Arguments.ANB
-            else -> run { println("Неверно указаны аргументы, используйте $arguments, выходим из программы"); exitProcess(0) }
+            else -> run { println("Bad arguments, use $arguments, exit"); exitProcess(0) }
         }
         UserId = Integer.parseInt(args[1])
         setSettings()
