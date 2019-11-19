@@ -6,6 +6,8 @@ import anbapp.exstensions.getDataFromRegexp
 import anbapp.exstensions.getDateFromString
 import anbapp.httpTools.downloadFromUrl
 import anbapp.logger.logger
+import anbapp.sender.EmailSender
+import anbapp.sender.listBookableForSend
 import com.google.gson.Gson
 import java.sql.Connection
 import java.sql.DriverManager
@@ -29,6 +31,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
         clearanalitic()
         parserAnb()
         checkIfNotFirst()
+        sendEmail()
     }
 
     private fun parserAnb() {
@@ -39,6 +42,15 @@ class ParserAnbNew : IParser, ParserAbstract() {
             } catch (e: Exception) {
                 logger("Error in getCalendar function", e.stackTrace, e, it.Url)
             }
+        }
+    }
+
+    private fun sendEmail() {
+        try {
+            val email = EmailSender(listBookableForSend)
+            email.send()
+        } catch (e: Exception) {
+            logger(e)
         }
     }
 

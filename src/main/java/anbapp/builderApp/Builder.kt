@@ -19,6 +19,9 @@ object BuilderApp {
     lateinit var UserDb: String
     lateinit var PassDb: String
     lateinit var Server: String
+    lateinit var EmailUser: String
+    lateinit var EmailPass: String
+    lateinit var SendUserEmail: String
     var Port: Int = 3306
     lateinit var TempPath: String
     lateinit var LogPath: String
@@ -40,6 +43,9 @@ class Builder(args: Array<String>) {
     lateinit var UserDb: String
     lateinit var PassDb: String
     lateinit var Server: String
+    lateinit var EmailUser: String
+    lateinit var EmailPass: String
+    lateinit var SendUserEmail: String
     var Port: Int = 3306
     val executePath: String = File(Class.forName("anbapp.AppKt").protectionDomain.codeSource.location.path).parentFile.toString()
     lateinit var TempPath: String
@@ -64,6 +70,7 @@ class Builder(args: Array<String>) {
         createDirs()
         createObj()
         getProxySettings()
+        getEmailUser()
     }
 
     private fun getProxySettings() {
@@ -74,15 +81,25 @@ class Builder(args: Array<String>) {
             val res = stmt0.executeQuery()
             if (res.next()) {
                 ProxyAddress = res.getString(1)
-                ProxyPort = res.getInt(2)
-                ProxyUser = res.getString(3)
-                ProxyPass = res.getString(4)
             }
         })
         BuilderApp.ProxyAddress = ProxyAddress
         BuilderApp.ProxyPass = ProxyPass
         BuilderApp.ProxyUser = ProxyUser
         BuilderApp.ProxyPort = ProxyPort
+    }
+
+    private fun getEmailUser() {
+        DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
+            val stmt0 = con.prepareStatement("SELECT users.user_email FROM users WHERE id = ?").apply {
+                setInt(1, BuilderApp.UserId)
+            }
+            val res = stmt0.executeQuery()
+            if (res.next()) {
+                SendUserEmail = res.getString(1)
+            }
+        })
+        BuilderApp.SendUserEmail = SendUserEmail
     }
 
     private fun setSettings() {
@@ -95,6 +112,8 @@ class Builder(args: Array<String>) {
         UserDb = doc.userdb ?: throw IllegalArgumentException("bad userdb")
         PassDb = doc.passdb ?: throw IllegalArgumentException("bad passdb")
         Server = doc.server ?: throw IllegalArgumentException("bad server")
+        EmailUser = doc.user_email ?: throw IllegalArgumentException("bad user email")
+        EmailPass = doc.pass_email ?: throw IllegalArgumentException("bad user pass")
         Port = doc.port ?: 3306
         TempPath = "$executePath${File.separator}tempdir_${arg.name.toLowerCase()}_${UserId}"
         LogPath = "$executePath${File.separator}logdir_${arg.name.toLowerCase()}_${UserId}"
@@ -136,6 +155,8 @@ class Builder(args: Array<String>) {
         BuilderApp.Port = Port
         BuilderApp.Prefix = Prefix
         BuilderApp.Server = Server
+        BuilderApp.EmailPass = EmailPass
+        BuilderApp.EmailUser = EmailUser
         BuilderApp.LogPath = LogPath
         BuilderApp.TempPath = TempPath
         BuilderApp.LogFile = LogFile
@@ -149,5 +170,7 @@ class Settings {
     var userdb: String? = null
     var passdb: String? = null
     var server: String? = null
+    var user_email: String? = null
+    var pass_email: String? = null
     var port: Int? = null
 }

@@ -5,6 +5,9 @@ import anbapp.exstensions.getDataFromRegexp
 import anbapp.logger.logger
 import anbapp.parsers.ParserAbstract
 import anbapp.parsers.ParserAnbNew
+import anbapp.sender.BookableOwner
+import anbapp.sender.BookableSend
+import anbapp.sender.listBookableForSend
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
@@ -71,6 +74,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 }
             }
             val listBookable = mutableListOf<BookingChange>()
+            val bookOwner = BookableOwner(mutableListOf(), d.owner, d.appName, d.Url, d.Id)
             d.calendars.filter { it.date.after(cD) }.forEach {
                 if (lastNumPars <= 0) {
                     return@forEach
@@ -95,6 +99,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     }
                     if (av == 1 && itAv == 0) {
                         listBookable.add(BookingChange(1, it.date, cD, it.price ?: "0"))
+                        bookOwner.bookable.add(BookableSend(it.date, cD, it.price ?: "0"))
                     }
                     p0.close()
                     stmt0.close()
@@ -116,6 +121,9 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     executeUpdate()
                     close()
                 }
+            }
+            if (bookOwner.bookable.size > 0) {
+                listBookableForSend.add(bookOwner)
             }
             con.prepareStatement("DELETE FROM checkup WHERE iid_anb = ?").apply {
                 setInt(1, d.Id)
