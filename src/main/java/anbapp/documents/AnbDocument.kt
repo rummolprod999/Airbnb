@@ -94,7 +94,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                         0
                     }
                     if (av == 1 && itAv == 0) {
-                        listBookable.add(BookingChange(1, it.date, cD))
+                        listBookable.add(BookingChange(1, it.date, cD, it.price ?: "0"))
                     }
                     p0.close()
                     stmt0.close()
@@ -106,12 +106,13 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             }
 
             for (lp in listBookable) {
-                con.prepareStatement("INSERT INTO bookable_changes(id_url, booking, date_cal, date_parsing, num_parsing) VALUES (?, ?, ?, ?, ?)").apply {
+                con.prepareStatement("INSERT INTO bookable_changes(id_url, booking, date_cal, date_parsing, num_parsing, price) VALUES (?, ?, ?, ?, ?, ?)").apply {
                     setInt(1, d.Id)
                     setInt(2, lp.booking)
                     setTimestamp(3, Timestamp(lp.dateCal.time))
                     setTimestamp(4, Timestamp(cD.time))
                     setInt(5, lastNumPars + 1)
+                    setString(6, lp.price)
                     executeUpdate()
                     close()
                 }
