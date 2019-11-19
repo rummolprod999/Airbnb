@@ -22,6 +22,7 @@ object BuilderApp {
     lateinit var EmailUser: String
     lateinit var EmailPass: String
     lateinit var SendUserEmail: String
+    var IsReport: Boolean = false
     var Port: Int = 3306
     lateinit var TempPath: String
     lateinit var LogPath: String
@@ -46,6 +47,7 @@ class Builder(args: Array<String>) {
     lateinit var EmailUser: String
     lateinit var EmailPass: String
     lateinit var SendUserEmail: String
+    var IsReport: Boolean = false
     var Port: Int = 3306
     val executePath: String = File(Class.forName("anbapp.AppKt").protectionDomain.codeSource.location.path).parentFile.toString()
     lateinit var TempPath: String
@@ -91,15 +93,20 @@ class Builder(args: Array<String>) {
 
     private fun getEmailUser() {
         DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
-            val stmt0 = con.prepareStatement("SELECT users.user_email FROM users WHERE id = ?").apply {
+            val stmt0 = con.prepareStatement("SELECT users.user_email, users.is_report FROM users WHERE id = ?").apply {
                 setInt(1, BuilderApp.UserId)
             }
             val res = stmt0.executeQuery()
             if (res.next()) {
                 SendUserEmail = res.getString(1)
+                val isReport = res.getInt(2)
+                if (isReport == 1) {
+                    IsReport = true
+                }
             }
         })
         BuilderApp.SendUserEmail = SendUserEmail
+        BuilderApp.IsReport = IsReport
     }
 
     private fun setSettings() {

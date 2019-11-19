@@ -1,7 +1,6 @@
 package anbapp.sender
 
 import anbapp.builderApp.BuilderApp
-import anbapp.logger.logger
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.mail.*
@@ -22,8 +21,7 @@ class EmailSender(val listBook: MutableList<BookableOwner>) : ISender {
     }
 
     override fun send() {
-        if (listBook.size == 0 || BuilderApp.SendUserEmail == "") {
-            logger("nothing to sent")
+        if (listBook.size == 0 || BuilderApp.SendUserEmail == "" || !BuilderApp.IsReport) {
             return
         }
         val subject = "New booking from airbnb"
