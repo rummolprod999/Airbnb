@@ -1,6 +1,7 @@
 package anbapp.sender
 
 import anbapp.builderApp.BuilderApp
+import anbapp.logger.logger
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.mail.*
@@ -42,6 +43,7 @@ class EmailSender(val listBook: MutableList<BookableOwner>) : ISender {
             message.subject = subject
             message.setContent(text, "text/html; charset=utf-8")
             Transport.send(message)
+            logger("email has been send")
         } catch (e: MessagingException) {
             throw RuntimeException(e)
         }
