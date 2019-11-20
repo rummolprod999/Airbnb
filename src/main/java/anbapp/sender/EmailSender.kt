@@ -14,11 +14,11 @@ class EmailSender(val listBook: MutableList<BookableOwner>) : ISender {
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd")
 
     init {
-
-        props["mail.smtp.auth"] = "true"
         props["mail.smtp.starttls.enable"] = "true"
-        props["mail.smtp.host"] = "smtp.gmail.com"
-        props["mail.smtp.port"] = "587"
+        props["mail.smtp.host"] = "smtp.mail.yahoo.com"
+        props["mail.smtp.ssl.enable"] = "true"
+        props["mail.smtp.port"] = "465"
+        props["mail.smtp.auth"] = "true"
     }
 
     override fun send() {
