@@ -30,12 +30,16 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             }
             var changePrice = ""
             var lastNumPars = 0
-            val stmtmp = con.prepareStatement("SELECT num_parsing FROM anb_url WHERE id = ?").apply {
+            var ownerName = ""
+            var apartName = ""
+            val stmtmp = con.prepareStatement("SELECT num_parsing, owner, apartment_name FROM anb_url WHERE id = ?").apply {
                 setInt(1, d.Id)
             }
             val pmp = stmtmp.executeQuery()
             if (pmp.next()) {
                 lastNumPars = pmp.getInt(1)
+                ownerName = pmp.getString(2)
+                apartName = pmp.getString(3)
             }
             val cD = ParserAnbNew.currDate
             val listPrice = mutableListOf<PriceChange>()
@@ -74,7 +78,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 }
             }
             val listBookable = mutableListOf<BookingChange>()
-            val bookOwner = BookableOwner(mutableListOf(), d.owner, d.appName, d.Url, d.Id)
+            val bookOwner = BookableOwner(mutableListOf(), ownerName, apartName, d.Url, d.Id)
             d.calendars.filter { it.date.after(cD) }.forEach {
                 if (lastNumPars <= 0) {
                     return@forEach
