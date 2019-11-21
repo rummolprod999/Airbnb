@@ -8,21 +8,21 @@ import javax.mail.*
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 
-class EmailSender(val listBook: MutableList<BookableOwner>) : ISender {
+class EmailSender : ISender {
     private val props: Properties = Properties()
     private val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd")
 
     init {
         props["mail.smtp.starttls.enable"] = "true"
-        props["mail.smtp.host"] = "smtp.mail.yahoo.com"
-        props["mail.smtp.ssl.enable"] = "true"
-        props["mail.smtp.port"] = "465"
+        props["mail.smtp.host"] = BuilderApp.SmtpServer
+        //props["mail.smtp.ssl.enable"] = "true"
+        props["mail.smtp.port"] = BuilderApp.SmtpPort
         props["mail.smtp.auth"] = "true"
     }
 
     override fun send() {
-        if (listBook.size == 0 || BuilderApp.SendUserEmail == "" || !BuilderApp.IsReport) {
+        if (listBookableForSend.size == 0 || BuilderApp.SendUserEmail == "" || !BuilderApp.IsReport) {
             return
         }
         val subject = "New booking from airbnb"
@@ -51,7 +51,7 @@ class EmailSender(val listBook: MutableList<BookableOwner>) : ISender {
 
     private fun createText(): String {
         val st = StringBuilder()
-        listBook.forEach {
+        listBookableForSend.forEach {
             st.append("<b>Apartment name</b>: ${it.appName}\n<br>")
             st.append("<b>Apartment owner</b>: ${it.owner}\n<br>")
             st.append("<b>Apartment url</b>: ${it.url}\n\n<br><br>")

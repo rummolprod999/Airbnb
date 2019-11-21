@@ -5,6 +5,7 @@ import anbapp.executor.Executor
 import anbapp.sender.BookableOwner
 import anbapp.sender.BookableSend
 import anbapp.sender.EmailSender
+import anbapp.sender.listBookableForSend
 import java.util.*
 
 
@@ -24,6 +25,7 @@ fun testSend() {
     ls1.add(booksend2)
     val bokkown1 = BookableOwner(ls1, "Dan", "name apartment", "https://www.airbnb.com/rooms/39409560", 47)
     listBook.add(bokkown1)
-    val email = EmailSender(listBook)
+    listBookableForSend = listBook
+    val email = EmailSender()
     email.send()
 }

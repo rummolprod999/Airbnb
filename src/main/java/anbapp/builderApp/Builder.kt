@@ -21,6 +21,8 @@ object BuilderApp {
     lateinit var Server: String
     lateinit var EmailUser: String
     lateinit var EmailPass: String
+    lateinit var SmtpServer: String
+    lateinit var SmtpPort: String
     lateinit var SendUserEmail: String
     var IsReport: Boolean = false
     var Port: Int = 3306
@@ -46,6 +48,8 @@ class Builder(args: Array<String>) {
     lateinit var Server: String
     lateinit var EmailUser: String
     lateinit var EmailPass: String
+    lateinit var SmtpServer: String
+    lateinit var SmtpPort: String
     lateinit var SendUserEmail: String
     var IsReport: Boolean = false
     var Port: Int = 3306
@@ -121,6 +125,8 @@ class Builder(args: Array<String>) {
         Server = doc.server ?: throw IllegalArgumentException("bad server")
         EmailUser = doc.user_email ?: throw IllegalArgumentException("bad user email")
         EmailPass = doc.pass_email ?: throw IllegalArgumentException("bad user pass")
+        SmtpServer = doc.smtp_server ?: throw IllegalArgumentException("bad smtp_server")
+        SmtpPort = doc.smtp_port ?: throw IllegalArgumentException("bad smtp_port")
         Port = doc.port ?: 3306
         TempPath = "$executePath${File.separator}tempdir_${arg.name.toLowerCase()}_${UserId}"
         LogPath = "$executePath${File.separator}logdir_${arg.name.toLowerCase()}_${UserId}"
@@ -167,6 +173,8 @@ class Builder(args: Array<String>) {
         BuilderApp.LogPath = LogPath
         BuilderApp.TempPath = TempPath
         BuilderApp.LogFile = LogFile
+        BuilderApp.SmtpServer = SmtpServer
+        BuilderApp.SmtpPort = SmtpPort
         BuilderApp.UrlConnect = "jdbc:mysql://$Server:$Port/$Database?jdbcCompliantTruncation=false&useUnicode=true&characterEncoding=utf-8&useLegacyDatetimeCode=false&serverTimezone=Europe/Moscow&connectTimeout=30000&socketTimeout=30000&useSSL=false"
     }
 }
@@ -179,5 +187,7 @@ class Settings {
     var server: String? = null
     var user_email: String? = null
     var pass_email: String? = null
+    var smtp_server: String? = null
+    var smtp_port: String? = null
     var port: Int? = null
 }

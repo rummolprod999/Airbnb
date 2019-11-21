@@ -6,8 +6,7 @@ import anbapp.exstensions.getDataFromRegexp
 import anbapp.exstensions.getDateFromString
 import anbapp.httpTools.downloadFromUrl
 import anbapp.logger.logger
-import anbapp.sender.EmailSender
-import anbapp.sender.listBookableForSend
+import anbapp.sender.ISender
 import com.google.gson.Gson
 import java.sql.Connection
 import java.sql.DriverManager
@@ -19,7 +18,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-class ParserAnbNew : IParser, ParserAbstract() {
+class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
     companion object WebCl {
         val dateNow = LocalDate.now()
         val customFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -47,8 +46,7 @@ class ParserAnbNew : IParser, ParserAbstract() {
 
     private fun sendEmail() {
         try {
-            val email = EmailSender(listBookableForSend)
-            email.send()
+            sender.send()
         } catch (e: Exception) {
             logger(e)
         }
