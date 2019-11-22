@@ -43,7 +43,7 @@ class EmailSender : ISender {
             message.subject = subject
             message.setContent(text, "text/html; charset=utf-8")
             Transport.send(message)
-            logger("email has been send")
+            logger("email has been sent")
         } catch (e: MessagingException) {
             throw RuntimeException(e)
         }
