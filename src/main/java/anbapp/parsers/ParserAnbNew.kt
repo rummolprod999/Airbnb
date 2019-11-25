@@ -168,7 +168,51 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
         })
     }
 
+    private fun checkNotFoundPage(page: String, idUrl: Int): Boolean {
+        var check = true
+        DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
+            if (page.contains("Did not download the page in")) {
+                check = false
+                con.prepareStatement("UPDATE anb_url SET suspend = suspend+1, last_parsing = ? WHERE id = ?").apply {
+                    setTimestamp(1, Timestamp.valueOf(dateNow.atStartOfDay()))
+                    setInt(2, idUrl)
+                    executeUpdate()
+                    close()
+                }
+            } else {
+                con.prepareStatement("UPDATE anb_url SET suspend = 0, last_parsing = ? WHERE id = ?").apply {
+                    setTimestamp(1, Timestamp.valueOf(dateNow.atStartOfDay()))
+                    setInt(2, idUrl)
+                    executeUpdate()
+                    close()
+                }
+            }
+        })
+        return check
+    }
+
+    private fun checkAfterTwoWeek(room: RoomAnb): Boolean {
+        if (room.susp < 2) {
+            return true
+        }
+        if (room.lastParsing.plusDays(14).isBefore(dateNow)) {
+            DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
+                con.prepareStatement("UPDATE anb_url SET suspend = 0 WHERE id = ?").apply {
+                    setInt(1, room.Id)
+                    executeUpdate()
+                    close()
+                }
+            })
+            return true
+        }
+        return false
+    }
+
     private fun getCalendar(room: RoomAnb) {
+        if (!checkAfterTwoWeek(room)) {
+            logger("apartment id ${room.Id} is skipped")
+            return
+        }
         val roomId = room.Url.getDataFromRegexp("""rooms/(\d+)""")
         if (roomId == "") {
             logger("Bad Url, roomId was not found ${room.Url}")
@@ -178,6 +222,9 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
         val jsonCal = downloadFromUrl(calUrl)
         if (jsonCal == "") {
             logger("jsonCal is empty $calUrl")
+            return
+        }
+        if (!checkNotFoundPage(jsonCal, room.Id)) {
             return
         }
         val gson = Gson()

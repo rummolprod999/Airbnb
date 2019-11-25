@@ -19,10 +19,10 @@ fun downloadFromUrl(urls: String, i: Int = 10, wt: Long = 3000): String {
     var count = 0
     var waitTime = wt
     while (true) {
-        //val i = 50
         if (count >= i) {
-            logger(String.format("Did not download the page in %d attempts", count), urls)
-            break
+            val retSt = String.format("Did not download the page in %d attempts", count)
+            logger(retSt, urls)
+            return retSt
         }
         try {
             var s: String

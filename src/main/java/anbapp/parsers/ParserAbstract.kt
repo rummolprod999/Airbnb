@@ -32,14 +32,16 @@ abstract class ParserAbstract {
         val arr = mutableListOf<RoomAnb>()
 
         DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
-            val stmt0 = con.prepareStatement("SELECT id, url FROM anb_url WHERE suspend = 0 AND id_user = ?").apply {
+            val stmt0 = con.prepareStatement("SELECT id, url, suspend, last_parsing FROM anb_url WHERE id_user = ?").apply {
                 setInt(1, BuilderApp.UserId)
             }
             val res = stmt0.executeQuery()
             while (res.next()) {
                 val id = res.getInt(1)
                 val url = res.getString(2)
-                arr.add(RoomAnb(id, url, listOf(), Price("", "", "", "", "", "", "", "", "", "", "", ""), "", "", CleanDisc(mutableListOf(), 0)))
+                val susp = res.getInt(3)
+                val lastParsing = res.getTimestamp(4).toLocalDateTime().toLocalDate()
+                arr.add(RoomAnb(id, url, listOf(), Price("", "", "", "", "", "", "", "", "", "", "", ""), "", "", CleanDisc(mutableListOf(), 0), susp, lastParsing))
             }
         })
         return arr
@@ -61,7 +63,7 @@ abstract class ParserAbstract {
         return b
     }
 
-    data class RoomAnb(val Id: Int, val Url: String, var calendars: List<Day>, var price: Price, var owner: String, var appName: String, var cl: CleanDisc)
+    data class RoomAnb(val Id: Int, val Url: String, var calendars: List<Day>, var price: Price, var owner: String, var appName: String, var cl: CleanDisc, val susp: Int, val lastParsing: LocalDate)
     data class Price(val checkIn: String, val checkOut: String, val priceUsd: String, val checkInFirst15: String, val checkOutFirst15: String, val priceUsdFirst15: String, val checkInSecond15: String, val checkOutSecond15: String, val priceUsdSecond15: String, val checkIn30: String, val checkOut30: String, val priceUsd30: String)
     data class CleanDisc(val discounts: List<String>, val cleaning: Int)
     data class Analitycs(val startDate: LocalDate, val endDate: LocalDate, var prices: MutableList<AnalitycsPrice>)
