@@ -1,6 +1,8 @@
 package anbapp.documents
 
 import anbapp.builderApp.BuilderApp
+import anbapp.builderApp.endDayInterval
+import anbapp.builderApp.startDayInterval
 import anbapp.exstensions.getDataFromRegexp
 import anbapp.logger.logger
 import anbapp.parsers.ParserAbstract
@@ -213,11 +215,8 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     close()
                 }
             }
-            /*if ((d.calendars.firstOrNull { it.date.after(cD) }?.minNights ?: 0) <= 6) {
-                analytics(con, 6L)
-            }*/
             val (monthDisc, weekDisc) = findDiscounts()
-            (6..30).forEach {
+            (startDayInterval..endDayInterval).forEach {
                 analytics(con, it.toLong(), monthDisc, weekDisc)
             }
 

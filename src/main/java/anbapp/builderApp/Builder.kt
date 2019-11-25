@@ -37,6 +37,8 @@ object BuilderApp {
 }
 
 const val arguments = "anb"
+const val startDayInterval = 2
+const val endDayInterval = 30
 
 class Builder(args: Array<String>) {
     var arg: Arguments

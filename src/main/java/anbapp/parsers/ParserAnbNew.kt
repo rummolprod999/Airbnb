@@ -1,6 +1,8 @@
 package anbapp.parsers
 
 import anbapp.builderApp.BuilderApp
+import anbapp.builderApp.endDayInterval
+import anbapp.builderApp.startDayInterval
 import anbapp.documents.AnbDocument
 import anbapp.exstensions.getDataFromRegexp
 import anbapp.exstensions.getDateFromString
@@ -80,7 +82,7 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
                 close()
             }
             var analitycsList = mutableListOf<Analitycs>()
-            (6..30).forEach {
+            (startDayInterval..endDayInterval).forEach {
                 val stmt0 = con.prepareStatement("SELECT a.start_date, a.end_date FROM analitic a WHERE a.perid_nights = ? AND a.id_user = ? GROUP BY a.start_date, a.end_date ORDER BY a.start_date").apply {
                     setInt(1, it)
                     setInt(2, BuilderApp.UserId)
