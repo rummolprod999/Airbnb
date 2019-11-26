@@ -1,6 +1,7 @@
 package anbapp.parsers
 
 import anbapp.builderApp.BuilderApp
+import anbapp.builderApp.apiKey
 import anbapp.builderApp.endDayInterval
 import anbapp.builderApp.startDayInterval
 import anbapp.documents.AnbDocument
@@ -197,7 +198,7 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
         }
         if (room.lastParsing.plusDays(14).isBefore(dateNow)) {
             DriverManager.getConnection(BuilderApp.UrlConnect, BuilderApp.UserDb, BuilderApp.PassDb).use(fun(con: Connection) {
-                con.prepareStatement("UPDATE anb_url SET suspend = 0 WHERE id = ?").apply {
+                con.prepareStatement("UPDATE anb_url SET suspend = 1 WHERE id = ?").apply {
                     setInt(1, room.Id)
                     executeUpdate()
                     close()
@@ -218,7 +219,7 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
             logger("Bad Url, roomId was not found ${room.Url}")
             return
         }
-        val calUrl = "https://www.airbnb.com/api/v2/homes_pdp_availability_calendar?currency=USA&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&locale=en&listing_id=$roomId&month=${dateNow.monthValue}&year=${dateNow.year}&count=8"
+        val calUrl = "https://www.airbnb.com/api/v2/homes_pdp_availability_calendar?currency=USA&key=$apiKey&locale=en&listing_id=$roomId&month=${dateNow.monthValue}&year=${dateNow.year}&count=8"
         val jsonCal = downloadFromUrl(calUrl)
         if (jsonCal == "") {
             logger("jsonCal is empty $calUrl")
@@ -246,7 +247,7 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
         var owner = ""
         var apartName = ""
         if (!existNameAndOwner(room.Id)) {
-            val urlListing = "https://www.airbnb.com/api/v1/listings/$roomId?key=d306zoyjsyarp7ifhu67rjxn52tv0t20"
+            val urlListing = "https://www.airbnb.com/api/v1/listings/$roomId?key=$apiKey"
             val jsonListing = downloadFromUrl(urlListing)
             if (jsonListing == "") {
                 logger("jsonCal is empty $urlListing")
@@ -266,13 +267,13 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
     }
 
     private fun getCleaningAndDiscount(roomId: String): CleanDisc {
-        val priceDiscount7 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dateNow.format(customFormatter)}&check_out=${dateNow.plusDays(7).format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=en&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+        val priceDiscount7 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dateNow.format(customFormatter)}&check_out=${dateNow.plusDays(7).format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=$apiKey&listing_id=$roomId&locale=en&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
         val jsonPrice7 = downloadFromUrl(priceDiscount7)
         if (jsonPrice7 == "") {
             logger("jsonPrice7 is empty $priceDiscount7")
             throw Exception("jsonPrice7 is empty")
         }
-        val priceDiscount28 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dateNow.format(customFormatter)}&check_out=${dateNow.plusDays(28).format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=en&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+        val priceDiscount28 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dateNow.format(customFormatter)}&check_out=${dateNow.plusDays(28).format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=$apiKey&listing_id=$roomId&locale=en&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
         val jsonPrice28 = downloadFromUrl(priceDiscount28)
         if (jsonPrice28 == "") {
             logger("jsonPrice28 is empty $priceDiscount28")
@@ -301,7 +302,7 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
     private fun getPrice(d: Day, roomId: String): Price {
         val minDay = d.date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
         val minNextday = minDay.plusDays(d.minNights.toLong())
-        val priceUrl = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${minDay.format(customFormatter)}&check_out=${minNextday.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+        val priceUrl = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${minDay.format(customFormatter)}&check_out=${minNextday.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=$apiKey&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
         val jsonPrice = downloadFromUrl(priceUrl)
         if (jsonPrice == "") {
             logger("jsonPrice is empty $priceUrl")
@@ -334,7 +335,7 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
             }
             val dayMonth1 = cDate.withDayOfMonth(1)
             val dayMonth15 = cDate.withDayOfMonth(15)
-            val priceUrl15 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth1.format(customFormatter)}&check_out=${dayMonth15.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+            val priceUrl15 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth1.format(customFormatter)}&check_out=${dayMonth15.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=$apiKey&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
             val jsonPrice15 = downloadFromUrl(priceUrl15)
             if (jsonPrice15 == "") {
                 logger("jsonPrice15 is empty $priceUrl15")
@@ -353,7 +354,7 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
             } else {
                 cDate.withDayOfMonth(30)
             }
-            val priceUrl16 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth16.format(customFormatter)}&check_out=${dayMonthLast.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+            val priceUrl16 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth16.format(customFormatter)}&check_out=${dayMonthLast.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=$apiKey&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
             val jsonPrice16 = downloadFromUrl(priceUrl16)
             if (jsonPrice16 == "") {
                 logger("jsonPrice16 is empty $priceUrl16")
@@ -366,7 +367,7 @@ class ParserAnbNew(val sender: ISender) : IParser, ParserAbstract() {
             priceUsd16 += (price16.pdpListingBookingDetails?.first()?.price?.priceItems?.first()?.total?.amountFormatted
                     ?: "") + ","
 
-            val priceUrl30 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth1.format(customFormatter)}&check_out=${dayMonthLast.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=d306zoyjsyarp7ifhu67rjxn52tv0t20&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
+            val priceUrl30 = """https://www.airbnb.com/api/v2/pdp_listing_booking_details?_format=for_web_with_date&_intents=p3_book_it&_interaction_type=pageload&check_in=${dayMonth1.format(customFormatter)}&check_out=${dayMonthLast.format(customFormatter)}&currency=USA&force_boost_unc_priority_message_type=&guests=1&key=$apiKey&listing_id=$roomId&locale=ru&number_of_adults=1&number_of_children=0&number_of_infants=0&show_smart_promotion=0"""
             val jsonPrice30 = downloadFromUrl(priceUrl30)
             if (jsonPrice30 == "") {
                 logger("jsonPrice30 is empty $priceUrl30")
