@@ -1,10 +1,15 @@
 package anbapp.builderApp
 
 import anbapp.Arguments
+import anbapp.logger.logger
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import java.io.File
 import java.io.FileReader
+import java.io.IOException
+import java.net.BindException
+import java.net.InetAddress
+import java.net.ServerSocket
 import java.sql.Connection
 import java.sql.DriverManager
 import java.text.SimpleDateFormat
@@ -37,6 +42,10 @@ object BuilderApp {
 }
 
 class Builder(args: Array<String>) {
+    companion object {
+        var socket: ServerSocket? = null
+    }
+
     var arg: Arguments
     var UserId: Int
     lateinit var Database: String
@@ -73,6 +82,7 @@ class Builder(args: Array<String>) {
         setSettings()
         createDirs()
         createObj()
+        checkIfRunning()
         getProxySettings()
         getEmailUser()
     }
@@ -154,6 +164,19 @@ class Builder(args: Array<String>) {
             } catch (e: Exception) {
                 println(e)
             }
+        }
+    }
+
+    private fun checkIfRunning() {
+        val port = 20000 + UserId
+        try {
+            socket = ServerSocket(port, 0, InetAddress.getByAddress(byteArrayOf(127, 0, 0, 1)))
+        } catch (e: BindException) {
+            logger("a parser already running")
+            exitProcess(1)
+        } catch (e: IOException) {
+            logger("unexpected error", e.stackTrace)
+            exitProcess(2)
         }
     }
 
