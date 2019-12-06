@@ -1,14 +1,10 @@
 package anbapp.builderApp
 
 import anbapp.Arguments
-import anbapp.logger.logger
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import java.io.File
 import java.io.FileReader
-import java.io.IOException
-import java.net.BindException
-import java.net.InetAddress
 import java.net.ServerSocket
 import java.sql.Connection
 import java.sql.DriverManager
@@ -82,7 +78,7 @@ class Builder(args: Array<String>) {
         setSettings()
         createDirs()
         createObj()
-        checkIfRunning()
+        //checkIfRunning()
         getProxySettings()
         getEmailUser()
     }
@@ -167,7 +163,7 @@ class Builder(args: Array<String>) {
         }
     }
 
-    private fun checkIfRunning() {
+    /*private fun checkIfRunning() {
         val port = 20000 + UserId
         try {
             socket = ServerSocket(port, 0, InetAddress.getByAddress(byteArrayOf(127, 0, 0, 1)))
@@ -178,7 +174,7 @@ class Builder(args: Array<String>) {
             logger("unexpected error", e.stackTrace)
             exitProcess(2)
         }
-    }
+    }*/
 
     private fun createObj() {
         BuilderApp.arg = arg
