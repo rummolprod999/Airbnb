@@ -56,7 +56,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                 val p0 = stmt0.executeQuery()
                 if (p0.next()) {
                     val res = p0.getString(1)
-                    if (it.price != res) {
+                    if (it.price != res && it.available) {
                         listPrice.add(PriceChange(it.price ?: "", res, it.date, cD))
                     }
                     p0.close()
