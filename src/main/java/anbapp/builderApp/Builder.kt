@@ -131,10 +131,10 @@ class Builder(args: Array<String>) {
         UserDb = doc.userdb ?: throw IllegalArgumentException("bad userdb")
         PassDb = doc.passdb ?: throw IllegalArgumentException("bad passdb")
         Server = doc.server ?: throw IllegalArgumentException("bad server")
-        EmailUser = doc.user_email ?: throw IllegalArgumentException("bad user email")
-        EmailPass = doc.pass_email ?: throw IllegalArgumentException("bad user pass")
-        SmtpServer = doc.smtp_server ?: throw IllegalArgumentException("bad smtp_server")
-        SmtpPort = doc.smtp_port ?: throw IllegalArgumentException("bad smtp_port")
+        EmailUser = doc.userEmail ?: throw IllegalArgumentException("bad user email")
+        EmailPass = doc.passEmail ?: throw IllegalArgumentException("bad user pass")
+        SmtpServer = doc.smtpServer ?: throw IllegalArgumentException("bad smtp server")
+        SmtpPort = doc.smtpPort ?: throw IllegalArgumentException("bad smtp port")
         Port = doc.port ?: 3306
         TempPath = "$executePath${File.separator}tempdir_${arg.name.toLowerCase()}_${UserId}"
         LogPath = "$executePath${File.separator}logdir_${arg.name.toLowerCase()}_${UserId}"
@@ -172,7 +172,7 @@ class Builder(args: Array<String>) {
         try {
             socket = ServerSocket(port, 0, InetAddress.getByAddress(byteArrayOf(127, 0, 0, 1)))
         } catch (e: BindException) {
-            logger("the parser already running")
+            logger("the parser already is running")
             exitProcess(1)
         } catch (e: IOException) {
             logger("unexpected error", e.stackTrace)
@@ -206,9 +206,9 @@ class Settings {
     var userdb: String? = null
     var passdb: String? = null
     var server: String? = null
-    var user_email: String? = null
-    var pass_email: String? = null
-    var smtp_server: String? = null
-    var smtp_port: String? = null
+    var userEmail: String? = null
+    var passEmail: String? = null
+    var smtpServer: String? = null
+    var smtpPort: String? = null
     var port: Int? = null
 }
