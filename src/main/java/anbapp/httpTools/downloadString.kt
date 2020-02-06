@@ -54,7 +54,6 @@ fun downloadFromUrl(urls: String, i: Int = 10, wt: Long = 3000): String {
         }
 
     }
-    return ""
 }
 
 fun downloadWaitWithRef(urls: String): String {

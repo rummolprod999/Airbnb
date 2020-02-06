@@ -12,7 +12,6 @@ import java.net.InetAddress
 import java.net.ServerSocket
 import java.sql.Connection
 import java.sql.DriverManager
-import java.text.SimpleDateFormat
 import kotlin.system.exitProcess
 
 
@@ -152,7 +151,6 @@ class Builder(args: Array<String>) {
         if (!log.exists()) {
             log.mkdir()
         }
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
         LogFile = "$LogPath${File.separator}log_parsing_${arg}.log"
     }
 

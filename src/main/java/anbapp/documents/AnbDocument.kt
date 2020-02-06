@@ -30,7 +30,6 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
                     close()
                 }
             }
-            var changePrice = ""
             var lastNumPars = 0
             var ownerName = ""
             var apartName = ""
@@ -264,7 +263,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             var avail = 0
             val p1 = stmt2.executeQuery()
             if (p1.next()) {
-                avail = p1.getInt(1) ?: 0
+                avail = p1.getInt(1)
             }
             p1.close()
             stmt2.close()
@@ -279,7 +278,7 @@ class AnbDocument(private val d: ParserAbstract.RoomAnb) : IDocument, AbstractDo
             }
             val p2 = stmt3.executeQuery()
             if (p2.next()) {
-                price = p2.getInt(1) ?: 0
+                price = p2.getInt(1)
             }
             p2.close()
             stmt3.close()
